@@ -4,7 +4,7 @@ import 'package:http/http.dart';
 
 import 'client_base.dart';
 import 'client_options.dart';
-import '../dart_proffix_api.dart';
+import '../dart_proffix_rest.dart';
 
 class ProffixClient implements BaseProffixClient {
   /// Creates a new instance of [ProffixClient]

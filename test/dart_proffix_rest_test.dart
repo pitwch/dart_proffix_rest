@@ -1,4 +1,4 @@
-import 'package:dart_proffix_rest/dart_proffix_api.dart';
+import 'package:dart_proffix_rest/dart_proffix_rest.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:dotenv/dotenv.dart' show load, isEveryDefined, env;

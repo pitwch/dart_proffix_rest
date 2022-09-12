@@ -1,4 +1,4 @@
-import '../dart_proffix_api.dart';
+import '../dart_proffix_rest.dart';
 
 abstract class BaseProffixClient {
   /// Extended by [ProffixClient]

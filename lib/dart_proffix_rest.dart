@@ -1,4 +1,4 @@
-library dart_proffix_api;
+library dart_proffix_rest;
 
 export 'src/client.dart';
 export 'src/exception.dart';
