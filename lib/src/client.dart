@@ -22,7 +22,8 @@ class ProffixClient implements BaseProffixClient {
   /// `options` - (Optional) Options of Proffix Rest API`
   ///
   /// `dioClient` - An existing Dio Client, if needed. When left null, an internal client will be created
-  ProffixClient({
+  ProffixClient(
+    this.pxSessionID, {
     required this.username,
     required this.password,
     required this.restURL,
