@@ -25,6 +25,9 @@ void main() {
         await tempClient.get(endpoint: "ADR/Adresse", params: {"Limit": "1"});
     expect(request.statusCode, 200);
 
+    final parsedJson = jsonDecode(request.body);
+    expect(parsedJson[0]["AdressNr"] > 0, true);
+
     var lgout = await tempClient.logout();
     expect(lgout.statusCode, 204);
 

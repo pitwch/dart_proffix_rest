@@ -38,7 +38,7 @@ class ProffixClient implements BaseProffixClient {
     }
     if (options == null) {
       _options = ProffixRestOptions();
-      _options.apiPrefix = "/pxapi/";
+      _options.apiPrefix = "pxapi";
       _options.loginEndpoint = "PRO/Login";
       _options.volumeLicence = false;
     } else {
@@ -72,6 +72,23 @@ class ProffixClient implements BaseProffixClient {
 
   // Utilities
 
+  Uri buildUriPx(String base, List<String> frags) {
+    Uri q = Uri.parse(base);
+    q.removeFragment;
+    List<String> cleanedFrags = [];
+    frags.forEach((frag) {
+      List<String> subFrags = frag.split("/");
+      subFrags.forEach((subFrag) {
+        cleanedFrags.add(subFrag);
+      });
+    });
+    return Uri(
+        scheme: q.scheme,
+        port: q.port,
+        host: q.host,
+        pathSegments: cleanedFrags);
+  }
+
   /// Utility method to Login
   Future<Response> login({
     required username,
@@ -83,11 +100,9 @@ class ProffixClient implements BaseProffixClient {
     httpClient,
   }) async {
     try {
-      final loginUri = Uri.parse(restURL +
-          options.apiPrefix +
-          options.version +
-          "/" +
-          options.loginEndpoint);
+      final loginUri = buildUriPx(
+          restURL, [options.apiPrefix, options.version, options.loginEndpoint]);
+
       final loginBody = jsonEncode({
         "Benutzer": username,
         "Passwort": password,
@@ -114,11 +129,9 @@ class ProffixClient implements BaseProffixClient {
       'PxSessionId': pxSessionID,
     });
     try {
-      final logoutUri = Uri.parse(restURL +
-          _options.apiPrefix +
-          _options.version +
-          "/" +
-          _options.loginEndpoint);
+      final logoutUri = buildUriPx(restURL,
+          [_options.apiPrefix, _options.version, _options.loginEndpoint]);
+      print(logoutUri);
       return await _httpClient.delete(logoutUri, headers: headers);
     } catch (e) {
       if (e is ProffixException) {
@@ -151,8 +164,11 @@ class ProffixClient implements BaseProffixClient {
 
     try {
       final getUri = _getUriUrl(
-          restURL + _options.apiPrefix + _options.version + "/" + endpoint,
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+              .toString(),
           params!);
+      print(getUri);
+
       return await _httpClient.get(getUri, headers: headers);
     } catch (e) {
       if (e is ProffixException) {
@@ -184,8 +200,11 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      return await _httpClient.post(Uri.parse(restURL + "/" + endpoint),
-          headers: headers, body: json.encode(data));
+      return await _httpClient.post(
+          buildUriPx(restURL,
+              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          headers: headers,
+          body: json.encode(data));
     } catch (e) {
       if (e is ProffixException) {
         rethrow;

@@ -13,7 +13,7 @@ class ProffixRestOptions {
   ProffixRestOptions(
       {this.key = "",
       this.version = "v4",
-      this.apiPrefix = "/pxapi/",
+      this.apiPrefix = "pxapi",
       this.loginEndpoint = "PRO/Login",
       this.userAgent = "DartWrapper",
       this.timeout = 200,
