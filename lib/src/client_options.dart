@@ -1,23 +1,24 @@
 class ProffixRestOptions {
-  String? key;
-  String? version = "v4";
-  String? apiPrefix = "/pxapi/";
-  String? loginEndpoint = "PRO/Login";
-  String? userAgent = "DartWrapper";
-  int? timeout = 0;
-  bool? verifySSL = true;
-  int? batchsize = 200;
-  bool? log = false;
-  bool? volumeLicence = false;
+  String key;
+  String version;
+  String apiPrefix;
+  String loginEndpoint;
+  String userAgent;
+  int timeout = 30;
+  bool verifySSL;
+  int batchsize;
+  bool log;
+  bool volumeLicence;
 
   ProffixRestOptions(
-      this.key,
-      this.version,
-      this.apiPrefix,
-      this.loginEndpoint,
-      this.userAgent,
-      this.timeout,
-      this.verifySSL,
-      this.log,
-      this.volumeLicence);
+      {this.key = "",
+      this.version = "v4",
+      this.apiPrefix = "/pxapi/",
+      this.loginEndpoint = "PRO/Login",
+      this.userAgent = "DartWrapper",
+      this.timeout = 200,
+      this.verifySSL = true,
+      this.batchsize = 200,
+      this.log = false,
+      this.volumeLicence = false});
 }

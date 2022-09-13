@@ -22,14 +22,13 @@ class ProffixClient implements BaseProffixClient {
   /// `options` - (Optional) Options of Proffix Rest API`
   ///
   /// `dioClient` - An existing Dio Client, if needed. When left null, an internal client will be created
-  ProffixClient(
-    this.pxSessionID, {
+  ProffixClient({
     required this.username,
     required this.password,
     required this.restURL,
     required this.database,
     List<String>? this.modules,
-    ProffixRestOptions? this.options,
+    ProffixRestOptions? options,
     Client? httpClient,
   }) {
     if (httpClient == null) {
@@ -37,13 +36,21 @@ class ProffixClient implements BaseProffixClient {
     } else {
       _httpClient = httpClient;
     }
+    if (options == null) {
+      _options = ProffixRestOptions();
+      _options.apiPrefix = "/pxapi/";
+      _options.loginEndpoint = "PRO/Login";
+      _options.volumeLicence = false;
+    } else {
+      _options = options;
+    }
   }
 
   /// HTTP Client
   late Client _httpClient;
 
   /// Proffix Rest Options
-  final ProffixRestOptions? options;
+  late ProffixRestOptions _options;
 
   /// Modules / Licences Proffix
   final List<String>? modules;
@@ -61,27 +68,92 @@ class ProffixClient implements BaseProffixClient {
   final String restURL;
 
   /// PxSessionId
-  final String pxSessionID;
+  String pxSessionID = "";
 
   // Utilities
+
+  /// Utility method to Login
+  Future<Response> login({
+    required username,
+    required password,
+    required restURL,
+    required database,
+    required options,
+    modules = const [],
+    httpClient,
+  }) async {
+    try {
+      final loginUri = Uri.parse(restURL +
+          options.apiPrefix +
+          options.version +
+          "/" +
+          options.loginEndpoint);
+      final loginBody = jsonEncode({
+        "Benutzer": username,
+        "Passwort": password,
+        "Datenbank": {"Name": database},
+        "Module": modules
+      });
+      return await _httpClient.post(loginUri,
+          body: loginBody, headers: {'content-type': 'application/json'});
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
+
+  /// Utility method to Logout
+  Future<Response> logout({
+    httpClient,
+  }) async {
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxSessionID,
+    });
+    try {
+      final logoutUri = Uri.parse(restURL +
+          _options.apiPrefix +
+          _options.version +
+          "/" +
+          _options.loginEndpoint);
+      return await _httpClient.delete(logoutUri, headers: headers);
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
 
   /// Utility method to make http get call
   @override
   Future<Response> get({
-    String path = '',
-    Map<String, String>? headers,
+    String endpoint = '',
     Map<String, dynamic>? params,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
-    headers ??= {};
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
       'PxSessionId': pxSessionID,
     });
 
     try {
-      final finalUri = _getUriUrl(restURL + path, params!);
-      return await _httpClient.get(finalUri, headers: headers);
+      final getUri = _getUriUrl(
+          restURL + _options.apiPrefix + _options.version + "/" + endpoint,
+          params!);
+      return await _httpClient.get(getUri, headers: headers);
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -93,20 +165,26 @@ class ProffixClient implements BaseProffixClient {
   /// Utility method to make http post call
   @override
   Future<Response> post({
-    String path = '',
-    Map<String, String>? headers,
-    Map<String, dynamic>? params,
+    String endpoint = '',
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    headers ??= {};
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
       'PxSessionId': pxSessionID,
     });
 
     try {
-      return await _httpClient.post(_getUriUrl(restURL + path, params!),
+      return await _httpClient.post(Uri.parse(restURL + "/" + endpoint),
           headers: headers, body: json.encode(data));
     } catch (e) {
       if (e is ProffixException) {
@@ -118,7 +196,7 @@ class ProffixClient implements BaseProffixClient {
 
   // This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
   static Uri _getUriUrl(String url, Map<String, dynamic> queryParameters) {
-    if (queryParameters == null || queryParameters.isEmpty) {
+    if (queryParameters.isEmpty) {
       return Uri.parse(url);
     }
     final uri = Uri.parse(url);

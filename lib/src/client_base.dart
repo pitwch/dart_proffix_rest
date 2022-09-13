@@ -16,15 +16,13 @@ abstract class BaseProffixClient {
 
   /// An alias of ProffixClient.call('get')
   Future<Response> get({
-    required String path,
-    Map<String, String> headers = const {},
-    Map<String, dynamic> params = const {},
+    required String endpoint,
+    Map<String, dynamic>? params = const {},
   });
 
   /// An alias of ProffixClient.call('post')
   Future<Response> post({
-    required String path,
-    Map<String, String>? headers = const {},
+    required String endpoint,
     Map<String, dynamic>? data,
   });
 }

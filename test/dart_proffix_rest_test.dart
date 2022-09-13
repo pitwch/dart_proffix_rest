@@ -1,7 +1,7 @@
+import 'dart:convert';
+import "package:crypto/crypto.dart";
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
-import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
-import 'package:dotenv/dotenv.dart' show load, isEveryDefined, env;
 
 // Generating code coverage:
 // 1. `dart pub global activate coverage`
@@ -12,28 +12,22 @@ import 'package:dotenv/dotenv.dart' show load, isEveryDefined, env;
 // `./codecov -t ${CODECOV_TOKEN}`
 
 void main() {
-  // Load the environment variables into memory
-  // I recommend using envify for a production app, this way is just simpler for an example app
-  load();
-  setUp(() {
-    // Create client with Creds key from a .env file in the root package directory
-    if (!isEveryDefined(['API'])) {
-      print('API key not provided, can not run tests');
-      return;
-    }
-
-    final String? _apiKey = env['API'];
-    if (_apiKey == null) {
-      print('API key not provided, can not run tests');
-      return;
-    }
-
-    final tempClient = ProffixClient(
-        httpClient: http.Client(),
+  test('Check Login', () async {
+    var bytesToHash = utf8.encode('gast123');
+    var sha256Digest = sha256.convert(bytesToHash);
+    var tempClient = ProffixClient(
         database: 'DEMODB',
         restURL: 'https://remote.proffix.net:11011',
         username: 'Gast',
-        password: 'gast123');
+        password: sha256Digest.toString());
+
+    var request =
+        await tempClient.get(endpoint: "ADR/Adresse", params: {"Limit": "1"});
+    expect(request.statusCode, 200);
+
+    var lgout = await tempClient.logout();
+    expect(lgout.statusCode, 204);
+
     tempClient.close();
   });
 }

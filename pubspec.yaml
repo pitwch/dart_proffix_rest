@@ -1,6 +1,6 @@
 name: dart_proffix_rest
 description: A Dart wrapper for Proffix Rest API
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/pitwch/dart_proffix_rest
 environment:
   sdk: ">=2.12.0 <3.0.0"
