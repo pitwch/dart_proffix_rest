@@ -19,4 +19,6 @@ and the Flutter guide for
 
 A Dart wrapper for Proffix REST-API
 
+![alt text](https://raw.githubusercontent.com/pitwch/dart_proffix_rest/master/_assets/dart-proffix "Dart Wrapper PROFFIX REST API")
+
 <!-- markdownlint-enable MD041 -->
