@@ -26,6 +26,7 @@ and the Flutter guide for
 - [Installation](#installation)
   - [Konfiguration](#konfiguration)
 - [Optionen](#optionen)
+  - [Methoden](#methoden)
 
 ## Installation
 
@@ -38,7 +39,7 @@ dart pub add dart_proffix_rest
 Die Konfiguration wird dem Client mitgegeben:
 
 | Konfiguration | Beispiel                    | Type                 | Bemerkung                             |
-| ------------- | --------------------------- | -------------------- | ------------------------------------- |
+|---------------|-----------------------------|----------------------|---------------------------------------|
 | restURL       | <https://myserver.ch:12299> | `string`             | URL der REST-API **ohne pxapi/v4/**   |
 | database      | DEMO                        | `string`             | Name der Datenbank                    |
 | username      | USR                         | `string`             | Names des Benutzers                   |
@@ -71,7 +72,7 @@ var pxClient = ProffixClient(
 Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 
 | Option        | Beispiel                              | Bemerkung                                                      |
-| ------------- | ------------------------------------- | -------------------------------------------------------------- |
+|---------------|---------------------------------------|----------------------------------------------------------------|
 | key           | 112a5a90fe28b...242b10141254b4de59028 | API-Key als SHA256 - Hash (kann auch direkt mitgegeben werden) |
 | version       | v3                                    | API-Version; Standard = v3                                     |
 | loginEndpoint | /pxapi/                               | Prefix für die API; Standard = /pxapi/                         |
@@ -83,4 +84,65 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | log           | true                                  | Aktiviert den Log für Debugging; Standard = false              |
 | volumeLicence | false                                 | Nutzt PROFFIX Volumenlizenzierung                              |
 
+
+#### Methoden
+
+| Parameter  | Typ           | Bemerkung                                                                                                |
+|------------|---------------|----------------------------------------------------------------------------------------------------------|
+| endpoint   | `string`      | Endpunkt der PROFFIX REST-API; z.B. ADR/Adresse,STU/Rapporte...                                          |
+| data       | `string` | Daten (werden automatisch in JSON konvertiert)                                                           |
+| parameters | ` Map<String, dynamic>?`  | Parameter gemäss [PROFFIX REST API Docs](http://www.proffix.net/Portals/0/content/REST%20API/index.html) |
+
+Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
+
+##### Get / Query
+
+```dart
+
+    var request =
+        await pxClient.get(endpoint: "ADR/Adresse/1", params: {"Fields": "AdressNr"});
+
+```
+
+##### Put / Update
+
+```dart
+    var request =
+        await pxClient.put(endpoint: "ADR/Adresse/1", jsonEncode({
+  "Name":   "Muster GmbH",
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }));
+
+```
+
+##### Patch / Update
+
+```dart
+ var request =
+        await pxClient.patch(endpoint: "ADR/Adresse/1", jsonEncode({
+  "Name":   "Muster GmbH",
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }));
+
+```
+
+##### Post / Create
+
+```dart
+ var request =
+        await pxClient.post(endpoint: "ADR/Adresse/1", jsonEncode({
+  "Name":   "Muster GmbH",
+  "Ort":    "Zürich",
+  "Zürich": "8000",
+ }));
+```
+
+##### Delete / Delete
+
+```dart
+  var request =
+        await pxClient.delete(endpoint: "ADR/Adresse/1");
+```
 <!-- markdownlint-enable MD041 -->

@@ -213,6 +213,107 @@ class ProffixClient implements BaseProffixClient {
     }
   }
 
+  /// Utility method to make http patch call
+  @override
+  Future<Response> patch({
+    String endpoint = '',
+    Map<String, dynamic>? data,
+  }) async {
+    // return await call('post', path: path, headers: headers, data: data);
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxSessionID,
+    });
+
+    try {
+      return await _httpClient.patch(
+          buildUriPx(restURL,
+              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          headers: headers,
+          body: json.encode(data));
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
+
+  /// Utility method to make http put call
+  @override
+  Future<Response> put({
+    String endpoint = '',
+    Map<String, dynamic>? data,
+  }) async {
+    // return await call('post', path: path, headers: headers, data: data);
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxSessionID,
+    });
+
+    try {
+      return await _httpClient.put(
+          buildUriPx(restURL,
+              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          headers: headers,
+          body: json.encode(data));
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
+
+  /// Utility method to make http delete call
+  @override
+  Future<Response> delete({String endpoint = ''}) async {
+    // return await call('post', path: path, headers: headers, data: data);
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxSessionID,
+    });
+
+    try {
+      return await _httpClient.delete(
+          buildUriPx(restURL,
+              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          headers: headers);
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
+
   // This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
   static Uri _getUriUrl(String url, Map<String, dynamic> queryParameters) {
     if (queryParameters.isEmpty) {

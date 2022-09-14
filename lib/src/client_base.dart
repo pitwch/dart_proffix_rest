@@ -25,4 +25,21 @@ abstract class BaseProffixClient {
     required String endpoint,
     Map<String, dynamic>? data,
   });
+
+  /// An alias of ProffixClient.call('patch')
+  Future<Response> patch({
+    required String endpoint,
+    Map<String, dynamic>? data,
+  });
+
+  /// An alias of ProffixClient.call('put')
+  Future<Response> put({
+    required String endpoint,
+    Map<String, dynamic>? data,
+  });
+
+  /// An alias of ProffixClient.call('delete')
+  Future<Response> delete({
+    required String endpoint,
+  });
 }
