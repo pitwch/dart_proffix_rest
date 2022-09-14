@@ -21,7 +21,7 @@ void main() {
     );
     var sha256Digest = sha256.convert(bytesToHash);
     var tempClient = ProffixClient(
-        database: 'DEMODB',
+        database: 'DEMODBPX5',
         restURL: envVars['PX_URL'].toString(),
         username: envVars['PX_USER'].toString(),
         password: sha256Digest.toString());
