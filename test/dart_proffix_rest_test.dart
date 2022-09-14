@@ -24,7 +24,9 @@ void main() {
         database: 'DEMODBPX5',
         restURL: envVars['PX_URL'].toString(),
         username: envVars['PX_USER'].toString(),
-        password: sha256Digest.toString());
+        password: sha256Digest.toString(),
+        modules: ["VOL"],
+        options: null);
 
     var request =
         await tempClient.get(endpoint: "ADR/Adresse", params: {"Limit": "1"});
