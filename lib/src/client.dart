@@ -27,7 +27,7 @@ class ProffixClient implements BaseProffixClient {
     required this.password,
     required this.restURL,
     required this.database,
-    List<String>? this.modules,
+    this.modules,
     ProffixRestOptions? options,
     Client? httpClient,
   }) {
@@ -76,12 +76,12 @@ class ProffixClient implements BaseProffixClient {
     Uri q = Uri.parse(base);
     q.removeFragment;
     List<String> cleanedFrags = [];
-    frags.forEach((frag) {
+    for (String frag in frags) {
       List<String> subFrags = frag.split("/");
-      subFrags.forEach((subFrag) {
+      for (String subFrag in subFrags) {
         cleanedFrags.add(subFrag);
-      });
-    });
+      }
+    }
     return Uri(
         scheme: q.scheme,
         port: q.port,

@@ -1,30 +1,30 @@
 class ProffixException implements Exception {
-  String? Message;
-  String? Endpoint;
-  String? Type;
-  int? Status;
-  List<ProffixExceptionField>? Fields;
+  String? message;
+  String? endpoint;
+  String? type;
+  int? status;
+  List<ProffixExceptionField>? fields;
   ProffixException(
-      [this.Message = "", this.Endpoint, this.Type, this.Status, this.Fields]);
+      [this.message = "", this.endpoint, this.type, this.status, this.fields]);
 
   factory ProffixException.fromJson(Map<String, dynamic> jsonData) {
     return ProffixException()
-      ..Message = jsonData['Message']
-      ..Endpoint = jsonData['Endpoint']
-      ..Type = jsonData['Type']
-      ..Status = jsonData['Status']
-      ..Fields = jsonData['Fields'];
+      ..message = jsonData['Message']
+      ..endpoint = jsonData['Endpoint']
+      ..type = jsonData['Type']
+      ..status = jsonData['Status']
+      ..fields = jsonData['Fields'];
   }
   @override
   String toString() {
-    if (Message == null) return "ProffixException";
-    return "ProffixException: $Message (${Status ?? 0}: ${Fields ?? null})";
+    if (message == null) return "ProffixException";
+    return "ProffixException: $message (${status ?? 0}: $fields)";
   }
 }
 
 class ProffixExceptionField {
-  final String? Reason;
-  final String? Name;
-  final String? Message;
-  ProffixExceptionField([this.Reason = "", this.Name, this.Message]);
+  final String? reason;
+  final String? name;
+  final String? message;
+  ProffixExceptionField([this.reason = "", this.name, this.message]);
 }
