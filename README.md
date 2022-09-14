@@ -25,6 +25,7 @@ and the Flutter guide for
 
 - [Installation](#installation)
   - [Konfiguration](#konfiguration)
+- [Optionen](#optionen)
 
 ## Installation
 
@@ -36,14 +37,14 @@ dart pub add dart_proffix_rest
 
 Die Konfiguration wird dem Client mitgegeben:
 
-| Konfiguration | Beispiel                    | Type          | Bemerkung                             |
-| ------------- | --------------------------- | ------------- | ------------------------------------- |
-| restURL       | <https://myserver.ch:12299> | `string`      | URL der REST-API **ohne pxapi/v4/**   |
-| database      | DEMO                        | `string`      | Name der Datenbank                    |
-| username      | USR                         | `string`      | Names des Benutzers                   |
-| password      | b62cce2fe18f7a156a9c...     | `string`      | SHA256-Hash des Benutzerpasswortes    |
-| modules       | []string{"ADR", "FIB"}      | `[]string`    | Benötigte Module (mit Komma getrennt) |
-| options       | &px.Options{Timeout: 30}    | `*px.Options` | Optionen (Details unter Optionen)     |
+| Konfiguration | Beispiel                    | Type                 | Bemerkung                             |
+| ------------- | --------------------------- | -------------------- | ------------------------------------- |
+| restURL       | <https://myserver.ch:12299> | `string`             | URL der REST-API **ohne pxapi/v4/**   |
+| database      | DEMO                        | `string`             | Name der Datenbank                    |
+| username      | USR                         | `string`             | Names des Benutzers                   |
+| password      | b62cce2fe18f7a156a9c...     | `string`             | SHA256-Hash des Benutzerpasswortes    |
+| modules       | ["ADR", "FIB"]              | `List<String>?`      | Benötigte Module (mit Komma getrennt) |
+| options       | &px.Options{Timeout: 30}    | `ProffixRestOptions` | Optionen (Details unter Optionen)     |
 
 Beispiel:
 
@@ -64,5 +65,22 @@ var pxClient = ProffixClient(
 
 
 ```
+
+### Optionen
+
+Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
+
+| Option        | Beispiel                              | Bemerkung                                                      |
+| ------------- | ------------------------------------- | -------------------------------------------------------------- |
+| key           | 112a5a90fe28b...242b10141254b4de59028 | API-Key als SHA256 - Hash (kann auch direkt mitgegeben werden) |
+| version       | v3                                    | API-Version; Standard = v3                                     |
+| loginEndpoint | /pxapi/                               | Prefix für die API; Standard = /pxapi/                         |
+| LoginEndpoint | PRO/Login                             | Endpunkt für Login; Standard = PRO/Login                       |
+| userAgent     | DartWrapper                           | User Agent; Standard = DartWrapper                             |
+| timeout       | 30                                    | Timeout in Sekunden                                            |
+| verifySSL     | true                                  | SSL prüfen                                                     |
+| batchsize     | 200                                   | Batchgrösse für Batchrequests; Standard = 200                  |
+| log           | true                                  | Aktiviert den Log für Debugging; Standard = false              |
+| volumeLicence | false                                 | Nutzt PROFFIX Volumenlizenzierung                              |
 
 <!-- markdownlint-enable MD041 -->
