@@ -96,7 +96,7 @@ class ProffixClient implements BaseProffixClient {
     required restURL,
     required database,
     required options,
-    modules = const [],
+    modules,
     httpClient,
   }) async {
     try {
@@ -131,7 +131,6 @@ class ProffixClient implements BaseProffixClient {
     try {
       final logoutUri = buildUriPx(restURL,
           [_options.apiPrefix, _options.version, _options.loginEndpoint]);
-      print(logoutUri);
       return await _httpClient.delete(logoutUri, headers: headers);
     } catch (e) {
       if (e is ProffixException) {
@@ -153,7 +152,8 @@ class ProffixClient implements BaseProffixClient {
         username: username,
         password: password,
         restURL: restURL,
-        database: database);
+        database: database,
+        modules: modules);
 
     pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
@@ -167,7 +167,6 @@ class ProffixClient implements BaseProffixClient {
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
               .toString(),
           params!);
-      print(getUri);
 
       return await _httpClient.get(getUri, headers: headers);
     } catch (e) {
@@ -190,7 +189,8 @@ class ProffixClient implements BaseProffixClient {
         username: username,
         password: password,
         restURL: restURL,
-        database: database);
+        database: database,
+        modules: modules);
 
     pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
@@ -201,8 +201,7 @@ class ProffixClient implements BaseProffixClient {
 
     try {
       return await _httpClient.post(
-          buildUriPx(restURL,
-              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
           body: json.encode(data));
     } catch (e) {
@@ -225,7 +224,8 @@ class ProffixClient implements BaseProffixClient {
         username: username,
         password: password,
         restURL: restURL,
-        database: database);
+        database: database,
+        modules: modules);
 
     pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
@@ -236,10 +236,9 @@ class ProffixClient implements BaseProffixClient {
 
     try {
       return await _httpClient.patch(
-          buildUriPx(restURL,
-              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
-          body: json.encode(data));
+          body: jsonEncode(data));
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -260,7 +259,8 @@ class ProffixClient implements BaseProffixClient {
         username: username,
         password: password,
         restURL: restURL,
-        database: database);
+        database: database,
+        modules: modules);
 
     pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
@@ -271,8 +271,7 @@ class ProffixClient implements BaseProffixClient {
 
     try {
       return await _httpClient.put(
-          buildUriPx(restURL,
-              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
           body: json.encode(data));
     } catch (e) {
@@ -292,7 +291,8 @@ class ProffixClient implements BaseProffixClient {
         username: username,
         password: password,
         restURL: restURL,
-        database: database);
+        database: database,
+        modules: modules);
 
     pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
@@ -303,8 +303,7 @@ class ProffixClient implements BaseProffixClient {
 
     try {
       return await _httpClient.delete(
-          buildUriPx(restURL,
-              [restURL, _options.apiPrefix, _options.version, endpoint]),
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers);
     } catch (e) {
       if (e is ProffixException) {

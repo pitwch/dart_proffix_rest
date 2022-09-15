@@ -84,14 +84,13 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | log           | true                                  | Aktiviert den Log für Debugging; Standard = false              |
 | volumeLicence | false                                 | Nutzt PROFFIX Volumenlizenzierung                              |
 
-
 #### Methoden
 
-| Parameter  | Typ           | Bemerkung                                                                                                |
-|------------|---------------|----------------------------------------------------------------------------------------------------------|
-| endpoint   | `string`      | Endpunkt der PROFFIX REST-API; z.B. ADR/Adresse,STU/Rapporte...                                          |
-| data       | `string` | Daten (werden automatisch in JSON konvertiert)                                                           |
-| parameters | ` Map<String, dynamic>?`  | Parameter gemäss [PROFFIX REST API Docs](http://www.proffix.net/Portals/0/content/REST%20API/index.html) |
+| Parameter  | Typ                     | Bemerkung                                                                                                |
+|------------|-------------------------|----------------------------------------------------------------------------------------------------------|
+| endpoint   | `string`                | Endpunkt der PROFFIX REST-API; z.B. ADR/Adresse,STU/Rapporte...                                          |
+| data       | `string`                | Daten (werden automatisch in JSON konvertiert)                                                           |
+| parameters | `Map<String, dynamic>?` | Parameter gemäss [PROFFIX REST API Docs](http://www.proffix.net/Portals/0/content/REST%20API/index.html) |
 
 Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
@@ -107,6 +106,7 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ##### Put / Update
 
 ```dart
+
     var request =
         await pxClient.put(endpoint: "ADR/Adresse/1", jsonEncode({
   "Name":   "Muster GmbH",
@@ -119,6 +119,7 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ##### Patch / Update
 
 ```dart
+
  var request =
         await pxClient.patch(endpoint: "ADR/Adresse/1", jsonEncode({
   "Name":   "Muster GmbH",
@@ -131,6 +132,7 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ##### Post / Create
 
 ```dart
+
  var request =
         await pxClient.post(endpoint: "ADR/Adresse/1", jsonEncode({
   "Name":   "Muster GmbH",
