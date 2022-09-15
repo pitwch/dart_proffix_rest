@@ -38,14 +38,14 @@ dart pub add dart_proffix_rest
 
 Die Konfiguration wird dem Client mitgegeben:
 
-| Konfiguration | Beispiel                    | Type                 | Bemerkung                             |
-|---------------|-----------------------------|----------------------|---------------------------------------|
-| restURL       | <https://myserver.ch:12299> | `string`             | URL der REST-API **ohne pxapi/v4/**   |
-| database      | DEMO                        | `string`             | Name der Datenbank                    |
-| username      | USR                         | `string`             | Names des Benutzers                   |
-| password      | b62cce2fe18f7a156a9c...     | `string`             | SHA256-Hash des Benutzerpasswortes    |
-| modules       | ["ADR", "FIB"]              | `List<String>?`      | Benötigte Module (mit Komma getrennt) |
-| options       | &px.Options{Timeout: 30}    | `ProffixRestOptions` | Optionen (Details unter Optionen)     |
+| Konfiguration | Beispiel                                | Type                 | Bemerkung                             |
+|---------------|-----------------------------------------|----------------------|---------------------------------------|
+| restURL       | <https://myserver.ch:12299>             | `string`             | URL der REST-API **ohne pxapi/v4/**   |
+| database      | DEMO                                    | `string`             | Name der Datenbank                    |
+| username      | USR                                     | `string`             | Names des Benutzers                   |
+| password      | b62cce2fe18f7a156a9c...                 | `string`             | SHA256-Hash des Benutzerpasswortes    |
+| modules       | ["ADR", "FIB"]                          | `List<String>?`      | Benötigte Module (mit Komma getrennt) |
+| options       | ProffixRestOptions(volumeLicence: true) | `ProffixRestOptions` | Optionen (Details unter Optionen)     |
 
 Beispiel:
 

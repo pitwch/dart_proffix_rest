@@ -44,6 +44,10 @@ class ProffixClient implements BaseProffixClient {
     } else {
       _options = options;
     }
+
+    if (_options.volumeLicence) {
+      modules = ["VOL"];
+    }
   }
 
   /// HTTP Client
@@ -53,7 +57,7 @@ class ProffixClient implements BaseProffixClient {
   late ProffixRestOptions _options;
 
   /// Modules / Licences Proffix
-  final List<String>? modules;
+  late List<String>? modules;
 
   /// Username Proffix
   final String username;
@@ -304,6 +308,44 @@ class ProffixClient implements BaseProffixClient {
       return await _httpClient.delete(
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers);
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(e.toString());
+    }
+  }
+
+  /// Utility method to directly get a list
+  @override
+  Future<Response> getList({
+    int listeNr = 0,
+    Map<String, dynamic>? data,
+  }) async {
+    // return await call('get', path: path, headers: headers, params: params);
+    var loginObj = await login(
+        options: _options,
+        username: username,
+        password: password,
+        restURL: restURL,
+        database: database,
+        modules: modules);
+
+    pxSessionID = loginObj.headers["pxsessionid"]!;
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxSessionID,
+    });
+
+    try {
+      var listDownload =
+          await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
+
+      String? downloadLocation = listDownload.headers["location"];
+      print(downloadLocation);
+      Uri downloadURI = Uri.parse(downloadLocation!);
+      return await _httpClient.get(downloadURI, headers: headers);
     } catch (e) {
       if (e is ProffixException) {
         rethrow;

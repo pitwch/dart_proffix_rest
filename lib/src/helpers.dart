@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class ProffixHelpers {
 /*   GetFiltererCount(header http.Header) (total int) {
@@ -29,5 +30,15 @@ class ProffixHelpers {
     } else {
       return 0;
     }
+  }
+
+  DateTime convertPxTimeToTime(String pxtime) {
+    DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
+    return pxformat.parse(pxtime);
+  }
+
+  String convertTimeToPxTime(DateTime date) {
+    final DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
+    return pxformat.format(date);
   }
 }

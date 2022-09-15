@@ -1,6 +1,7 @@
 import 'dart:convert';
 import "package:crypto/crypto.dart";
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
+import 'package:dart_proffix_rest/src/client_options.dart';
 import 'package:dart_proffix_rest/src/helpers.dart';
 import 'package:test/test.dart';
 
@@ -27,7 +28,7 @@ void main() {
       username: envVars['PX_USER'].toString(),
       password: sha256Digest.toString(),
       modules: ["VOL"],
-      options: null);
+      options: ProffixRestOptions(volumeLicence: true));
 
   Map<String, dynamic> tmpAddress = {
     "Name": "APITest",
@@ -38,7 +39,7 @@ void main() {
   };
 
   int tmpAdressNr = 0;
-
+  DateTime tmpDateTime = DateTime.now();
   test('Create Address', () async {
     // Create Address
     var postReq =
@@ -95,10 +96,23 @@ void main() {
     expect(getReq.statusCode, 204);
   });
 
+/*   test('Get List', () async {
+    // Get Request Test with Filter and Limit Parameters
+
+    var getReq = await tempClient.getList(listeNr: 1222, data: {});
+    expect(getReq.statusCode, 200);
+  }); */
+
   test('Logout', () async {
     var lgout = await tempClient.logout();
     expect(lgout.statusCode, 204);
 
     tempClient.close();
+  });
+
+  test('Check convertPxTimeToTime', () async {
+    var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
+    var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
+    expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
   });
 }

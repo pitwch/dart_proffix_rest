@@ -42,4 +42,10 @@ abstract class BaseProffixClient {
   Future<Response> delete({
     required String endpoint,
   });
+
+  /// An alias of ProffixClient.getList('getList')
+/*   Future<Response> getList({
+    required int listeNr,
+    Map<String, dynamic>? data,
+  }); */
 }
