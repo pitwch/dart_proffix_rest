@@ -71,7 +71,6 @@ class ProffixClient implements BaseProffixClient {
   String pxSessionID = "";
 
   // Utilities
-
   Uri buildUriPx(String base, List<String> frags) {
     Uri q = Uri.parse(base);
     q.removeFragment;

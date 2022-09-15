@@ -1,8 +1,10 @@
 import 'dart:convert';
 import "package:crypto/crypto.dart";
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
+import 'package:dart_proffix_rest/src/helpers.dart';
 import 'package:test/test.dart';
-import 'dart:io' show Platform;
+
+import 'package:dotenv/dotenv.dart';
 
 // Generating code coverage:
 // 1. `dart pub global activate coverage`
@@ -13,7 +15,8 @@ import 'dart:io' show Platform;
 // `./codecov -t ${CODECOV_TOKEN}`
 
 void main() {
-  Map<String, String> envVars = Platform.environment;
+  var envVars = DotEnv(includePlatformEnvironment: true)..load();
+  //Map<String, String> envVars = Platform.environment;
   var bytesToHash = utf8.encode(
     envVars['PX_PASS'].toString(),
   );
@@ -43,11 +46,7 @@ void main() {
     expect(postReq.statusCode, 201);
 
     // Get LocationID
-    /*   var locationId = postReq.headers["location"];
-    if (locationId != null) {
-      var q = Uri.parse(locationId);
-      print(q);
-    } */
+    tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
   });
 
   test('Get Address', () async {
@@ -59,8 +58,32 @@ void main() {
     expect(getReq.statusCode, 200);
 
     final parsedJson = jsonDecode(getReq.body);
-    tmpAdressNr = parsedJson[0]["AdressNr"];
+
+    expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
     expect(tmpAdressNr > 0, true);
+
+    int count = ProffixHelpers().getFiltererCount(getReq.headers);
+    expect(count > 0, true);
+  });
+
+  test('Update Address (Patch)', () async {
+    tmpAddress["AdressNr"] = tmpAdressNr;
+    tmpAddress["Vorname"] = "Updated PATCH";
+    // Patch Request Test
+    var patchReq = await tempClient.patch(
+        endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
+
+    expect(patchReq.statusCode, 204);
+  });
+
+  test('Update Address (Put)', () async {
+    tmpAddress["AdressNr"] = tmpAdressNr;
+    tmpAddress["Vorname"] = "Updated PUT";
+    // Put Request Test
+    var putReq = await tempClient.put(
+        endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
+
+    expect(putReq.statusCode, 204);
   });
 
   test('Delete Address', () async {
