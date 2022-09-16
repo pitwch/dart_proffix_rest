@@ -27,6 +27,8 @@ and the Flutter guide for
   - [Konfiguration](#konfiguration)
 - [Optionen](#optionen)
   - [Methoden](#methoden)
+  - [Spezielle Endpunkte](#spezielle-endpunkte)
+- [Weitere Beispiele](#weitere-beispiele)
 
 ## Installation
 
@@ -108,11 +110,11 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ```dart
 
     var request =
-        await pxClient.put(endpoint: "ADR/Adresse/1", jsonEncode({
+        await pxClient.put(endpoint: "ADR/Adresse/1", {
   "Name":   "Muster GmbH",
   "Ort":    "Zürich",
   "Zürich": "8000",
- }));
+ });
 
 ```
 
@@ -121,11 +123,11 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ```dart
 
  var request =
-        await pxClient.patch(endpoint: "ADR/Adresse/1", jsonEncode({
+        await pxClient.patch(endpoint: "ADR/Adresse/1", {
   "Name":   "Muster GmbH",
   "Ort":    "Zürich",
   "Zürich": "8000",
- }));
+ });
 
 ```
 
@@ -134,11 +136,11 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 ```dart
 
  var request =
-        await pxClient.post(endpoint: "ADR/Adresse/1", jsonEncode({
+        await pxClient.post(endpoint: "ADR/Adresse/1", {
   "Name":   "Muster GmbH",
   "Ort":    "Zürich",
   "Zürich": "8000",
- }));
+ });
 ```
 
 ##### Delete / Delete
@@ -147,4 +149,105 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
   var request =
         await pxClient.delete(endpoint: "ADR/Adresse/1");
 ```
+
+#### Spezielle Endpunkte
+
+##### Logout
+
+Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei.
+
+**Hinweis:** Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet
+
+```dart
+
+ var lgout = await pxClient.logout();
+
+
+```
+
+Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
+
+##### GET List
+
+Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
+
+```dart
+
+var list = await pxClient.getList(listeNr: 1232,data: {});
+
+
+```
+
+**Hinweis:** Der Dateityp (zurzeit nur PDF) kann über den Header `File-Type` ermittelt werden\*
+
+#### Hilfsfunktionen
+
+##### convertPxTimeToTime
+
+Konvertiert einen Zeitstempel der PROFFIX REST-API in time.Time
+
+```dart
+
+var tim = ProffixHelpers().convertPxTimeToTime('2004-04-11 00:00:00')
+
+```
+
+##### convertTimeToPxTime
+
+Konvertiert einen time.Time in einen Zeitstempel der PROFFIX REST-API
+
+```dart
+
+// Create DateTime from now
+var timeNow = DateTime tmpDateTime = DateTime.now();
+
+// Convert to PxTime
+var tm = ProffixHelpers().convertTimeToPxTime(timeNow);
+
+
+```
+
+##### convertLocationId
+
+Extrahiert die ID aus dem Header Location der PROFFIX REST-API
+
+```dart
+
+// Example Create Address
+  var postReq =
+        await tempClient.post(endpoint: "ADR/Adresse", data: {
+    "Name": "Test",
+    "Vorname": "Rest",
+    "Ort": "Zürich",
+    "PLZ": "8000",
+    "Land": {"LandNr": "CH"},
+  });
+
+  // Get LocationID from Header --> returns newly created AdressNr from posted Address
+ createdAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
+
+```
+
+##### getFiltererCount
+
+Extrahiert die Anzahl Ergebnisse aus dem Header PxMetaData der PROFFIX REST-API
+
+```dart
+
+// Example Get Address with Filter PLZ == Münchwilen
+    var getReq = await tempClient.get(endpoint: "ADR/Adresse", params: {
+      "Filter": "PLZ=='Münchwilen'",
+      "Fields": "AdressNr,Name,Vorname,Ort,PLZ"
+    });
+
+  // Get FilteredCount from Header --> returns the total amount of filtered Addresses
+ countAddresses = ProffixHelpers().getFiltererCount(getReq.headers);
+
+```
+
+### Weitere Beispiele
+
+Im Ordner [/examples](https://github.com/pitwch/dart_proffix_rest/tree/master/_examples) finden sich weitere,
+auskommentierte Beispiele.
+
 <!-- markdownlint-enable MD041 -->

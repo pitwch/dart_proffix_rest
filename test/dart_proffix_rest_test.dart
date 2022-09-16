@@ -106,7 +106,6 @@ void main() {
   test('Logout', () async {
     var lgout = await tempClient.logout();
     expect(lgout.statusCode, 204);
-
     tempClient.close();
   });
 
