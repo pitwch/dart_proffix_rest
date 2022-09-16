@@ -44,8 +44,8 @@ abstract class BaseProffixClient {
   });
 
   /// An alias of ProffixClient.getList('getList')
-/*   Future<Response> getList({
+  Future<Response> getList({
     required int listeNr,
     Map<String, dynamic>? data,
-  }); */
+  });
 }

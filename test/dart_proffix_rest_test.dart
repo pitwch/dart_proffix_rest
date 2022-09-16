@@ -99,14 +99,15 @@ void main() {
 /*   test('Get List', () async {
     // Get Request Test with Filter and Limit Parameters
 
-    var getReq = await tempClient.getList(listeNr: 1222, data: {});
-    expect(getReq.statusCode, 200);
+    var listReq = await tempClient.getList(listeNr: 1016, data: {});
+    print(listReq.headers);
+    print(listReq.body);
+    expect(listReq.statusCode, 200);
   }); */
 
   test('Logout', () async {
     var lgout = await tempClient.logout();
     expect(lgout.statusCode, 204);
-    tempClient.close();
   });
 
   test('Check convertPxTimeToTime', () async {

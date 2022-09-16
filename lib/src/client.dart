@@ -134,7 +134,13 @@ class ProffixClient implements BaseProffixClient {
     try {
       final logoutUri = buildUriPx(restURL,
           [_options.apiPrefix, _options.version, _options.loginEndpoint]);
-      return await _httpClient.delete(logoutUri, headers: headers);
+
+      var logoutTask = await _httpClient.delete(logoutUri, headers: headers);
+
+      /// It's important to close each client when it's done being used; failing to do so can cause the Dart process to hang.
+      _httpClient.close();
+
+      return logoutTask;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -339,12 +345,13 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
+      data ??= {};
       var listDownload =
           await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
-
+      print(listDownload.statusCode);
       String? downloadLocation = listDownload.headers["location"];
-      print(downloadLocation);
       Uri downloadURI = Uri.parse(downloadLocation!);
+      print(downloadURI.toString());
       return await _httpClient.get(downloadURI, headers: headers);
     } catch (e) {
       if (e is ProffixException) {

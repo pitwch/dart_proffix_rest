@@ -154,7 +154,7 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
 ##### Logout
 
-Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei.
+Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei. Zusätzlich wird der Dart Client geschlossen.
 
 **Hinweis:** Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet
 
