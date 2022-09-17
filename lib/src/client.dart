@@ -28,6 +28,7 @@ class ProffixClient implements BaseProffixClient {
     required this.restURL,
     required this.database,
     this.modules,
+    String? pxSessionID,
     ProffixRestOptions? options,
     Client? httpClient,
   }) {
@@ -43,6 +44,12 @@ class ProffixClient implements BaseProffixClient {
       _options.volumeLicence = false;
     } else {
       _options = options;
+    }
+
+    if (pxSessionID == null) {
+      _pxSessionID = "";
+    } else {
+      _pxSessionID = pxSessionID;
     }
 
     if (_options.volumeLicence) {
@@ -72,7 +79,7 @@ class ProffixClient implements BaseProffixClient {
   final String restURL;
 
   /// PxSessionId
-  String pxSessionID = "";
+  String _pxSessionID = "";
 
   // Utilities
   Uri buildUriPx(String base, List<String> frags) {
@@ -112,8 +119,11 @@ class ProffixClient implements BaseProffixClient {
         "Datenbank": {"Name": database},
         "Module": modules
       });
-      return await _httpClient.post(loginUri,
+      var lgn = await _httpClient.post(loginUri,
           body: loginBody, headers: {'content-type': 'application/json'});
+      _pxSessionID = lgn.headers["pxsessionid"]!;
+
+      return lgn;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -129,7 +139,7 @@ class ProffixClient implements BaseProffixClient {
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': _pxSessionID,
     });
     try {
       final logoutUri = buildUriPx(restURL,
@@ -156,19 +166,12 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? params,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
@@ -193,26 +196,21 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
-      return await _httpClient.post(
+      var resp = await _httpClient.post(
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
           body: json.encode(data));
+      setPxSessionId(resp.headers["pxsessionid"]);
+      return resp;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -228,26 +226,22 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
-      return await _httpClient.patch(
+      var resp = await _httpClient.patch(
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
           body: jsonEncode(data));
+      setPxSessionId(resp.headers["pxsessionid"]);
+
+      return resp;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -263,26 +257,22 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
-      return await _httpClient.put(
+      var resp = await _httpClient.put(
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
           headers: headers,
           body: json.encode(data));
+      setPxSessionId(resp.headers["pxsessionid"]);
+
+      return resp;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -295,19 +285,12 @@ class ProffixClient implements BaseProffixClient {
   @override
   Future<Response> delete({String endpoint = ''}) async {
     // return await call('post', path: path, headers: headers, data: data);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
@@ -329,30 +312,26 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
-    var loginObj = await login(
-        options: _options,
-        username: username,
-        password: password,
-        restURL: restURL,
-        database: database,
-        modules: modules);
+    String pxsessionid = await getPxSessionId();
 
-    pxSessionID = loginObj.headers["pxsessionid"]!;
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
-      'PxSessionId': pxSessionID,
+      'PxSessionId': pxsessionid,
     });
 
     try {
       data ??= {};
       var listDownload =
           await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
-      print(listDownload.statusCode);
       String? downloadLocation = listDownload.headers["location"];
+      setPxSessionId(listDownload.headers["pxsessionid"]);
+      Map<String, String> headersDownload = {};
+      headersDownload.addAll({
+        'PxSessionId': pxsessionid,
+      });
       Uri downloadURI = Uri.parse(downloadLocation!);
-      print(downloadURI.toString());
-      return await _httpClient.get(downloadURI, headers: headers);
+      return await _httpClient.get(downloadURI, headers: headersDownload);
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -368,6 +347,26 @@ class ProffixClient implements BaseProffixClient {
     }
     final uri = Uri.parse(url);
     return uri.replace(queryParameters: queryParameters);
+  }
+
+  void setPxSessionId(pxsessionid) {
+    _pxSessionID = pxsessionid;
+  }
+
+  Future<String> getPxSessionId() async {
+    if (_pxSessionID == "") {
+      var lgn = await login(
+          username: username,
+          password: password,
+          restURL: restURL,
+          database: database,
+          options: _options,
+          modules: modules);
+      String pxsessionid = lgn.headers["pxsessionid"].toString();
+      setPxSessionId(pxsessionid);
+      return pxsessionid;
+    }
+    return _pxSessionID;
   }
 
   /// Closes the client and cleans up any resources associated with it.

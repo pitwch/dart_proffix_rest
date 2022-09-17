@@ -61,7 +61,7 @@ var pxClient = ProffixClient(
         username: 'USR',
         password: 'b62cce2fe18f7a156a9c719c57bebf0478a3d50f0d7bd18d9e8a40be2e663017',
         modules: ["VOL"],
-        options: null);;
+        options: null);
 
     var request =
         await pxClient.get(endpoint: "ADR/Adresse", params: {"Limit": "1"});
@@ -166,6 +166,30 @@ Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz dami
 ```
 
 Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
+
+##### getPxSessionId()
+
+Gibt die aktuelle PxSessionId zurück
+
+```dart
+
+ var pxSessionId = await pxClient.getPxSessionId();
+
+
+```
+
+##### setPxSessionId()
+
+Setzt die PxSessionId manuell
+
+**Hinweis:** Diese Methode wird nur für Servicelogins (z.b. via Extension oder Proffix WebView benötigt)
+
+```dart
+
+ pxClient.setPxSessionId("99753429-9716-cf41-066a-8c98edc5e928");
+
+
+```
 
 ##### GET List
 

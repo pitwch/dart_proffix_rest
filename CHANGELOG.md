@@ -1,5 +1,11 @@
 # Release Note
 
+## v0.0.5
+
+- Fix PxSessionId
+- Add getPxSessionId() and setPxSessionId()
+- Fix getList()
+
 ## v0.0.4
 
 - Fix Tests, Add Helper Functions

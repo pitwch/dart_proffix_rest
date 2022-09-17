@@ -39,6 +39,7 @@ void main() {
   };
 
   int tmpAdressNr = 0;
+  String tmpPxSessionId = '';
   DateTime tmpDateTime = DateTime.now();
   test('Create Address', () async {
     // Create Address
@@ -48,6 +49,9 @@ void main() {
 
     // Get LocationID
     tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
+
+    // Temporary save PxSessionId for Check
+    tmpPxSessionId = await tempClient.getPxSessionId();
   });
 
   test('Get Address', () async {
@@ -96,14 +100,25 @@ void main() {
     expect(getReq.statusCode, 204);
   });
 
-/*   test('Get List', () async {
+  test('Get List', () async {
     // Get Request Test with Filter and Limit Parameters
 
     var listReq = await tempClient.getList(listeNr: 1016, data: {});
-    print(listReq.headers);
-    print(listReq.body);
+
     expect(listReq.statusCode, 200);
-  }); */
+
+    // Check if filetype is PDF
+    expect(listReq.headers["content-type"], "application/pdf");
+
+    // Check if Content-Lenght (=filesize) greater than 0
+    expect(int.parse(listReq.headers["content-length"].toString()) > 0, true);
+  });
+
+  test('Check same Session', () async {
+    var pxsessionidend = await tempClient.getPxSessionId();
+    // SessionId on End should be same as on start
+    expect(tmpPxSessionId, pxsessionidend);
+  });
 
   test('Logout', () async {
     var lgout = await tempClient.logout();
