@@ -67,7 +67,7 @@ void main() {
     expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
     expect(tmpAdressNr > 0, true);
 
-    int count = ProffixHelpers().getFiltererCount(getReq.headers);
+    int count = ProffixHelpers().getFilteredCount(getReq.headers);
     expect(count > 0, true);
   });
 
@@ -90,6 +90,13 @@ void main() {
 
     expect(putReq.statusCode, 204);
   });
+
+  /*  test('Fail Test (Get)', () async {
+    // Put Request Test
+    var putReq = await tempClient.get(endpoint: "ADR/Adresse/212121");
+
+    expect(putReq.statusCode, 404);
+  }); */
 
   test('Delete Address', () async {
     // Get Request Test with Filter and Limit Parameters

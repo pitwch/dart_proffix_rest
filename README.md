@@ -14,6 +14,7 @@ and the Flutter guide for
 <!-- markdownlint-disable MD041 -->
 
 [![pub package](https://img.shields.io/pub/v/dart_proffix_rest)](https://pub.dev/packages/dart_proffix_rest)
+[![Build Status](https://github.com/pitwch/dart_proffix_rest/actions/workflows/ci.yml/badge.svg)](https://github.com/pitwch/dart_proffix_rest/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/pitwch/dart_proffix_rest/branch/main/graph/badge.svg?token=MDG6GG8RCE)](https://codecov.io/gh/pitwch/dart_proffix_rest)
 [![License](https://img.shields.io/github/license/pitwch/dart_proffix_rest)](https://github.com/pitwch/dart_proffix_rest/blob/main/LICENSE)
 
@@ -80,8 +81,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | loginEndpoint | /pxapi/                               | Prefix für die API; Standard = /pxapi/                         |
 | LoginEndpoint | PRO/Login                             | Endpunkt für Login; Standard = PRO/Login                       |
 | userAgent     | DartWrapper                           | User Agent; Standard = DartWrapper                             |
-| timeout       | 30                                    | Timeout in Sekunden                                            |
-| verifySSL     | true                                  | SSL prüfen                                                     |
+| timeout       | 15                                    | Timeout in Sekunden                                            |
 | batchsize     | 200                                   | Batchgrösse für Batchrequests; Standard = 200                  |
 | log           | true                                  | Aktiviert den Log für Debugging; Standard = false              |
 | volumeLicence | false                                 | Nutzt PROFFIX Volumenlizenzierung                              |
@@ -252,7 +252,7 @@ Extrahiert die ID aus dem Header Location der PROFFIX REST-API
 
 ```
 
-##### getFiltererCount
+##### getFilteredCount
 
 Extrahiert die Anzahl Ergebnisse aus dem Header PxMetaData der PROFFIX REST-API
 
@@ -265,7 +265,7 @@ Extrahiert die Anzahl Ergebnisse aus dem Header PxMetaData der PROFFIX REST-API
     });
 
   // Get FilteredCount from Header --> returns the total amount of filtered Addresses
- countAddresses = ProffixHelpers().getFiltererCount(getReq.headers);
+ countAddresses = ProffixHelpers().getFilteredCount(getReq.headers);
 
 ```
 

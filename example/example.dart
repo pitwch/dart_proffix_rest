@@ -44,7 +44,7 @@ void main() async {
   });
 
   // Die Anzahl der Suchergebnisse aus dem Header ziehen
-  int countResults = ProffixHelpers().getFiltererCount(getAddress.headers);
+  int countResults = ProffixHelpers().getFilteredCount(getAddress.headers);
   print("${"Es wurden $countResults"} Adressen für 'Muster' gefunden");
 
   // Die gefundenden Adressen aus JSON dekodieren

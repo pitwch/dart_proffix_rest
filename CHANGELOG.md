@@ -1,5 +1,11 @@
 # Release Note
 
+## v0.0.6
+
+- Add detailled docs
+- Fix typos
+- Fix tests
+
 ## v0.0.5
 
 - Fix PxSessionId

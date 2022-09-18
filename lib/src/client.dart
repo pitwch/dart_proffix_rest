@@ -66,16 +66,16 @@ class ProffixClient implements BaseProffixClient {
   /// Modules / Licences Proffix
   late List<String>? modules;
 
-  /// Username Proffix
+  /// Username in Proffix
   final String username;
 
-  /// Password Proffix
+  /// Password in Proffix (SHA256 - Hash; use Helper Method convertSHA256 to convert)
   final String password;
 
   /// Database Proffix
   final String database;
 
-  /// REST API URL
+  /// Rest API Url in format https://myserver.ch:12233
   final String restURL;
 
   /// PxSessionId
@@ -119,8 +119,10 @@ class ProffixClient implements BaseProffixClient {
         "Datenbank": {"Name": database},
         "Module": modules
       });
-      var lgn = await _httpClient.post(loginUri,
-          body: loginBody, headers: {'content-type': 'application/json'});
+      var lgn = await _httpClient.post(loginUri, body: loginBody, headers: {
+        'content-type': 'application/json'
+      }).timeout(Duration(seconds: _options.timeout));
+
       _pxSessionID = lgn.headers["pxsessionid"]!;
 
       return lgn;
@@ -132,7 +134,7 @@ class ProffixClient implements BaseProffixClient {
     }
   }
 
-  /// Utility method to Logout
+  /// Do logout on Proffix REST-API and deletes PxSessionId
   Future<Response> logout({
     httpClient,
   }) async {
@@ -145,7 +147,10 @@ class ProffixClient implements BaseProffixClient {
       final logoutUri = buildUriPx(restURL,
           [_options.apiPrefix, _options.version, _options.loginEndpoint]);
 
-      var logoutTask = await _httpClient.delete(logoutUri, headers: headers);
+      var logoutTask = await _httpClient
+          .delete(logoutUri, headers: headers)
+          .timeout(Duration(seconds: _options.timeout));
+      _pxSessionID = "";
 
       /// It's important to close each client when it's done being used; failing to do so can cause the Dart process to hang.
       _httpClient.close();
@@ -167,7 +172,6 @@ class ProffixClient implements BaseProffixClient {
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
     String pxsessionid = await getPxSessionId();
-
     Map<String, String> headers = {};
     headers.addAll({
       'content-type': 'application/json',
@@ -180,7 +184,9 @@ class ProffixClient implements BaseProffixClient {
               .toString(),
           params!);
 
-      return await _httpClient.get(getUri, headers: headers);
+      return await _httpClient
+          .get(getUri, headers: headers)
+          .timeout(Duration(seconds: _options.timeout));
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -205,10 +211,13 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      var resp = await _httpClient.post(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
-          headers: headers,
-          body: json.encode(data));
+      var resp = await _httpClient
+          .post(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              headers: headers,
+              body: json.encode(data))
+          .timeout(Duration(seconds: _options.timeout));
       setPxSessionId(resp.headers["pxsessionid"]);
       return resp;
     } catch (e) {
@@ -235,10 +244,14 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      var resp = await _httpClient.patch(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
-          headers: headers,
-          body: jsonEncode(data));
+      var resp = await _httpClient
+          .patch(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              headers: headers,
+              body: jsonEncode(data))
+          .timeout(Duration(seconds: _options.timeout));
+
       setPxSessionId(resp.headers["pxsessionid"]);
 
       return resp;
@@ -266,10 +279,14 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      var resp = await _httpClient.put(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
-          headers: headers,
-          body: json.encode(data));
+      var resp = await _httpClient
+          .put(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              headers: headers,
+              body: json.encode(data))
+          .timeout(Duration(seconds: _options.timeout));
+
       setPxSessionId(resp.headers["pxsessionid"]);
 
       return resp;
@@ -284,7 +301,6 @@ class ProffixClient implements BaseProffixClient {
   /// Utility method to make http delete call
   @override
   Future<Response> delete({String endpoint = ''}) async {
-    // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
 
     Map<String, String> headers = {};
@@ -294,9 +310,12 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      return await _httpClient.delete(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]),
-          headers: headers);
+      return await _httpClient
+          .delete(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              headers: headers)
+          .timeout(Duration(seconds: _options.timeout));
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -331,7 +350,9 @@ class ProffixClient implements BaseProffixClient {
         'PxSessionId': pxsessionid,
       });
       Uri downloadURI = Uri.parse(downloadLocation!);
-      return await _httpClient.get(downloadURI, headers: headersDownload);
+      return await _httpClient
+          .get(downloadURI, headers: headersDownload)
+          .timeout(Duration(seconds: _options.timeout));
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -349,8 +370,8 @@ class ProffixClient implements BaseProffixClient {
     return uri.replace(queryParameters: queryParameters);
   }
 
-  void setPxSessionId(pxsessionid) {
-    _pxSessionID = pxsessionid;
+  void setPxSessionId(String? pxsessionid) {
+    _pxSessionID = pxsessionid!;
   }
 
   Future<String> getPxSessionId() async {
