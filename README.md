@@ -271,7 +271,7 @@ Extrahiert die Anzahl Ergebnisse aus dem Header PxMetaData der PROFFIX REST-API
 
 ### Weitere Beispiele
 
-Im Ordner [/examples](https://github.com/pitwch/dart_proffix_rest/tree/master/_examples) finden sich weitere,
+Im Ordner [/example](https://github.com/pitwch/dart_proffix_rest/tree/master/example) finden sich weitere,
 auskommentierte Beispiele.
 
 <!-- markdownlint-enable MD041 -->
