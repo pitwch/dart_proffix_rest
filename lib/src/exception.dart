@@ -1,30 +1,21 @@
-class ProffixException implements Exception {
-  String? message;
-  String? endpoint;
-  String? type;
-  int? status;
-  List<ProffixExceptionField>? fields;
-  ProffixException(
-      [this.message = "", this.endpoint, this.type, this.status, this.fields]);
+import 'dart:convert';
 
-  factory ProffixException.fromJson(Map<String, dynamic> jsonData) {
-    return ProffixException()
-      ..message = jsonData['Message']
-      ..endpoint = jsonData['Endpoint']
-      ..type = jsonData['Type']
-      ..status = jsonData['Status']
-      ..fields = jsonData['Fields'];
-  }
+class ProffixException implements Exception {
+  String? body;
+  int? statusCode;
+  ProffixException({this.body, this.statusCode});
+
   @override
   String toString() {
-    if (message == null) return "ProffixException";
-    return "ProffixException: $message (${status ?? 0}: $fields)";
-  }
-}
+    if (body == null) return "ProffixException";
 
-class ProffixExceptionField {
-  final String? reason;
-  final String? name;
-  final String? message;
-  ProffixExceptionField([this.reason = "", this.name, this.message]);
+    if (body == "") return "ProffixException";
+
+    var jsonBody = jsonDecode(body!);
+    var message = jsonBody["Message"];
+    // var type = jsonBody["Type"];
+    //  var fields = jsonBody["Fields"];
+
+    return "$message";
+  }
 }

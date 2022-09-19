@@ -1,5 +1,4 @@
 import 'dart:convert';
-import "package:crypto/crypto.dart";
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
 import 'package:dart_proffix_rest/src/client_options.dart';
 import 'package:dart_proffix_rest/src/helpers.dart';
@@ -17,16 +16,12 @@ import 'package:dotenv/dotenv.dart';
 
 void main() {
   var envVars = DotEnv(includePlatformEnvironment: true)..load();
-  //Map<String, String> envVars = Platform.environment;
-  var bytesToHash = utf8.encode(
-    envVars['PX_PASS'].toString(),
-  );
-  var sha256Digest = sha256.convert(bytesToHash);
-  var tempClient = ProffixClient(
+
+  var validClient = ProffixClient(
       database: 'DEMODBPX5',
       restURL: envVars['PX_URL'].toString(),
       username: envVars['PX_USER'].toString(),
-      password: sha256Digest.toString(),
+      password: ProffixHelpers().convertSHA256(envVars['PX_PASS'].toString()),
       modules: ["VOL"],
       options: ProffixRestOptions(volumeLicence: true));
 
@@ -44,21 +39,24 @@ void main() {
   test('Create Address', () async {
     // Create Address
     var postReq =
-        await tempClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
+        await validClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
+
     expect(postReq.statusCode, 201);
 
     // Get LocationID
     tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
 
     // Temporary save PxSessionId for Check
-    tmpPxSessionId = await tempClient.getPxSessionId();
+    tmpPxSessionId = validClient.getPxSessionId().toString();
   });
 
   test('Get Address', () async {
     // Get Request Test with Filter and Limit Parameters
-    var getReq = await tempClient.get(endpoint: "ADR/Adresse", params: {
+    var getReq = await validClient.get(endpoint: "ADR/Adresse", params: {
       "Filter": "Name=='APITest'",
-      "Fields": "AdressNr,Name,Vorname,Ort,PLZ"
+      "Fields": "AdressNr,Name,Vorname,Ort,PLZ",
+      "Sort": "-AdressNr",
+      "Limit": "4"
     });
     expect(getReq.statusCode, 200);
 
@@ -75,7 +73,7 @@ void main() {
     tmpAddress["AdressNr"] = tmpAdressNr;
     tmpAddress["Vorname"] = "Updated PATCH";
     // Patch Request Test
-    var patchReq = await tempClient.patch(
+    var patchReq = await validClient.patch(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
 
     expect(patchReq.statusCode, 204);
@@ -85,7 +83,7 @@ void main() {
     tmpAddress["AdressNr"] = tmpAdressNr;
     tmpAddress["Vorname"] = "Updated PUT";
     // Put Request Test
-    var putReq = await tempClient.put(
+    var putReq = await validClient.put(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
 
     expect(putReq.statusCode, 204);
@@ -93,7 +91,7 @@ void main() {
 
   /*  test('Fail Test (Get)', () async {
     // Put Request Test
-    var putReq = await tempClient.get(endpoint: "ADR/Adresse/212121");
+    var putReq = await validClient.get(endpoint: "ADR/Adresse/212121");
 
     expect(putReq.statusCode, 404);
   }); */
@@ -101,7 +99,7 @@ void main() {
   test('Delete Address', () async {
     // Get Request Test with Filter and Limit Parameters
 
-    var getReq = await tempClient.delete(
+    var getReq = await validClient.delete(
       endpoint: "ADR/Adresse/$tmpAdressNr",
     );
     expect(getReq.statusCode, 204);
@@ -110,31 +108,43 @@ void main() {
   test('Get List', () async {
     // Get Request Test with Filter and Limit Parameters
 
-    var listReq = await tempClient.getList(listeNr: 1016, data: {});
+    var listReq = await validClient.getList(listeNr: 1016, data: {});
 
     expect(listReq.statusCode, 200);
 
     // Check if filetype is PDF
-    expect(listReq.headers["content-type"], "application/pdf");
+    expect(listReq.headers["content-type"].toString(), "application/pdf");
 
     // Check if Content-Lenght (=filesize) greater than 0
     expect(int.parse(listReq.headers["content-length"].toString()) > 0, true);
   });
 
   test('Check same Session', () async {
-    var pxsessionidend = await tempClient.getPxSessionId();
+    var pxsessionidend = validClient.getPxSessionId().toString();
     // SessionId on End should be same as on start
     expect(tmpPxSessionId, pxsessionidend);
   });
-
-  test('Logout', () async {
-    var lgout = await tempClient.logout();
-    expect(lgout.statusCode, 204);
-  });
-
   test('Check convertPxTimeToTime', () async {
     var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
     var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
     expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
+  });
+  test('Logout', () async {
+    var lgout = await validClient.logout();
+    expect(lgout.statusCode, 204);
+  });
+
+  test('Failed Login', () async {
+    var invalidClient = ProffixClient(
+        database: 'DEMODBPX5',
+        restURL: envVars['PX_URL'].toString(),
+        username: envVars['PX_USER'].toString(),
+        password: ProffixHelpers().convertSHA256("nonvalidlogin"),
+        modules: ["VOL"],
+        options: ProffixRestOptions(volumeLicence: true));
+
+    // Check if ProffixException is thrown
+    expect(() => invalidClient.get(endpoint: "ADR/Adresse"),
+        throwsA(isA<ProffixException>()));
   });
 }

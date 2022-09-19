@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:async/async.dart';
 import 'package:http/http.dart';
 
 import 'client_base.dart';
@@ -119,18 +120,25 @@ class ProffixClient implements BaseProffixClient {
         "Datenbank": {"Name": database},
         "Module": modules
       });
-      var lgn = await _httpClient.post(loginUri, body: loginBody, headers: {
-        'content-type': 'application/json'
-      }).timeout(Duration(seconds: _options.timeout));
+      var loginResponse = await _httpClient.post(loginUri,
+          body: loginBody,
+          headers: {
+            'content-type': 'application/json'
+          }).timeout(Duration(seconds: _options.timeout));
 
-      _pxSessionID = lgn.headers["pxsessionid"]!;
-
-      return lgn;
+      switch (loginResponse.statusCode) {
+        case 201:
+          _pxSessionID = loginResponse.headers["pxsessionid"]!;
+          return loginResponse;
+        default:
+          throw ProffixException(
+              body: loginResponse.body, statusCode: loginResponse.statusCode);
+      }
     } catch (e) {
-      if (e is ProffixException) {
+      if (e is Exception) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw Result.error(e.toString());
     }
   }
 
@@ -150,6 +158,8 @@ class ProffixClient implements BaseProffixClient {
       var logoutTask = await _httpClient
           .delete(logoutUri, headers: headers)
           .timeout(Duration(seconds: _options.timeout));
+
+      // Clear PxSessionId
       _pxSessionID = "";
 
       /// It's important to close each client when it's done being used; failing to do so can cause the Dart process to hang.
@@ -160,7 +170,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is ProffixException) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -184,14 +194,24 @@ class ProffixClient implements BaseProffixClient {
               .toString(),
           params!);
 
-      return await _httpClient
+      var resp = await _httpClient
           .get(getUri, headers: headers)
           .timeout(Duration(seconds: _options.timeout));
+
+      switch (resp.statusCode) {
+        case 200:
+          // Update PxSessionId
+          setPxSessionId(resp.headers["pxsessionid"]);
+          return resp;
+        default:
+          throw Result.error(
+              ProffixException(body: resp.body, statusCode: resp.statusCode));
+      }
     } catch (e) {
-      if (e is ProffixException) {
+      if (e is Exception) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -218,13 +238,15 @@ class ProffixClient implements BaseProffixClient {
               headers: headers,
               body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
+
+      // Update PxSessionId
       setPxSessionId(resp.headers["pxsessionid"]);
       return resp;
     } catch (e) {
-      if (e is ProffixException) {
+      if (e is Exception) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -252,6 +274,7 @@ class ProffixClient implements BaseProffixClient {
               body: jsonEncode(data))
           .timeout(Duration(seconds: _options.timeout));
 
+      // Update PxSessionId
       setPxSessionId(resp.headers["pxsessionid"]);
 
       return resp;
@@ -259,7 +282,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is ProffixException) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -287,6 +310,7 @@ class ProffixClient implements BaseProffixClient {
               body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
 
+      // Update PxSessionId
       setPxSessionId(resp.headers["pxsessionid"]);
 
       return resp;
@@ -294,7 +318,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is ProffixException) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -310,17 +334,21 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
-      return await _httpClient
+      var resp = await _httpClient
           .delete(
               buildUriPx(
                   restURL, [_options.apiPrefix, _options.version, endpoint]),
               headers: headers)
           .timeout(Duration(seconds: _options.timeout));
+
+      // Update PxSessionId
+      setPxSessionId(resp.headers["pxsessionid"]);
+      return resp;
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -354,14 +382,14 @@ class ProffixClient implements BaseProffixClient {
           .get(downloadURI, headers: headersDownload)
           .timeout(Duration(seconds: _options.timeout));
     } catch (e) {
-      if (e is ProffixException) {
+      if (e is Exception) {
         rethrow;
       }
-      throw ProffixException(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
-  // This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
+  /// This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
   static Uri _getUriUrl(String url, Map<String, dynamic> queryParameters) {
     if (queryParameters.isEmpty) {
       return Uri.parse(url);
@@ -370,10 +398,13 @@ class ProffixClient implements BaseProffixClient {
     return uri.replace(queryParameters: queryParameters);
   }
 
+  /// Manually sets the PxSessionId
   void setPxSessionId(String? pxsessionid) {
+    print(pxsessionid);
     _pxSessionID = pxsessionid!;
   }
 
+  /// Returns the used PxSessionId
   Future<String> getPxSessionId() async {
     if (_pxSessionID == "") {
       var lgn = await login(
@@ -383,17 +414,15 @@ class ProffixClient implements BaseProffixClient {
           database: database,
           options: _options,
           modules: modules);
+
+      if (lgn.statusCode != 201) {
+        throw ProffixException(body: lgn.body, statusCode: lgn.statusCode);
+      }
       String pxsessionid = lgn.headers["pxsessionid"].toString();
+
       setPxSessionId(pxsessionid);
       return pxsessionid;
     }
     return _pxSessionID;
-  }
-
-  /// Closes the client and cleans up any resources associated with it.
-  ///
-  /// It's important to close each client when it's done being used; failing to do so can cause the Dart process to hang.
-  void close() {
-    _httpClient.close();
   }
 }

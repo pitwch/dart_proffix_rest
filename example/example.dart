@@ -36,7 +36,6 @@ void main() async {
   // AdresseNr der neu erstellen Adresse anzeigen
   int adressNr = ProffixHelpers().convertLocationId(createAddress.headers);
   print("${"Die neue Adresse wurde mit AdressNr $adressNr"} erstellt");
-
   // Alle Adressen, welche wie 'Muster' lauten abrufen
   var getAddress = await pxClient.get(endpoint: "ADR/Adresse", params: {
     "Filter": "Name@='Muster'",
@@ -64,5 +63,4 @@ void main() async {
 
   // Ausloggen und aufräumen
   await pxClient.logout();
-  pxClient.close();
 }

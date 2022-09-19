@@ -92,7 +92,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 |------------|-------------------------|----------------------------------------------------------------------------------------------------------|
 | endpoint   | `string`                | Endpunkt der PROFFIX REST-API; z.B. ADR/Adresse,STU/Rapporte...                                          |
 | data       | `string`                | Daten (werden automatisch in JSON konvertiert)                                                           |
-| parameters | `Map<String, dynamic>?` | Parameter gemäss [PROFFIX REST API Docs](http://www.proffix.net/Portals/0/content/REST%20API/index.html) |
+| parameters | `Map<String, dynamic>?` | Parameter gemäss [PROFFIX REST API Docs](https://www.proffix.net/Portals/0/content/REST%20API/index.html) |
 
 Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
@@ -141,13 +141,16 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
   "Ort":    "Zürich",
   "Zürich": "8000",
  });
+
 ```
 
 ##### Delete / Delete
 
 ```dart
+
   var request =
         await pxClient.delete(endpoint: "ADR/Adresse/1");
+
 ```
 
 #### Spezielle Endpunkte
@@ -162,7 +165,6 @@ Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz dami
 
  var lgout = await pxClient.logout();
 
-
 ```
 
 Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
@@ -174,7 +176,6 @@ Gibt die aktuelle PxSessionId zurück
 ```dart
 
  var pxSessionId = await pxClient.getPxSessionId();
-
 
 ```
 
@@ -188,7 +189,6 @@ Setzt die PxSessionId manuell
 
  pxClient.setPxSessionId("99753429-9716-cf41-066a-8c98edc5e928");
 
-
 ```
 
 ##### GET List
@@ -198,7 +198,6 @@ Gibt direkt die Liste der PROFFIX REST API aus (ohne Umwege)
 ```dart
 
 var list = await pxClient.getList(listeNr: 1232,data: {});
-
 
 ```
 
@@ -227,7 +226,6 @@ var timeNow = DateTime tmpDateTime = DateTime.now();
 
 // Convert to PxTime
 var tm = ProffixHelpers().convertTimeToPxTime(timeNow);
-
 
 ```
 
