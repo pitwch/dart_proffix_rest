@@ -18,7 +18,7 @@ void main() {
   var envVars = DotEnv(includePlatformEnvironment: true)..load();
 
   var validClient = ProffixClient(
-      database: 'DEMODBPX5',
+      database: envVars['PX_DB'].toString(),
       restURL: envVars['PX_URL'].toString(),
       username: envVars['PX_USER'].toString(),
       password: ProffixHelpers().convertSHA256(envVars['PX_PASS'].toString()),
@@ -30,6 +30,7 @@ void main() {
     "Vorname": "Rest",
     "Ort": "Zürich",
     "PLZ": "8000",
+    "DebitorenSteuercode": null,
     "Land": {"LandNr": "CH"},
   };
 
@@ -106,9 +107,17 @@ void main() {
   });
 
   test('Get List', () async {
-    // Get Request Test with Filter and Limit Parameters
+    // Search a list and get ListeNr
+    var listSearch = await validClient.get(
+        endpoint: "PRO/Liste",
+        params: {"Filter": "name@='IMP_Protokoll.repx'", "Fields": "ListeNr"});
 
-    var listReq = await validClient.getList(listeNr: 1016, data: {});
+    expect(listSearch.statusCode, 200);
+    var listeFirst = jsonDecode(listSearch.body)[0];
+    int listeNr = listeFirst["ListeNr"];
+
+    // Request Liste as File
+    var listReq = await validClient.getList(listeNr: listeNr, data: {});
 
     expect(listReq.statusCode, 200);
 
@@ -119,21 +128,42 @@ void main() {
     expect(int.parse(listReq.headers["content-length"].toString()) > 0, true);
   });
 
-  test('Check same Session', () async {
+  test('Check same Session (toString)', () async {
     var pxsessionidend = validClient.getPxSessionId().toString();
     // SessionId on End should be same as on start
     expect(tmpPxSessionId, pxsessionidend);
   });
-  test('Check convertPxTimeToTime', () async {
-    var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
-    var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
-    expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
+
+  /*  test('Test Error on Create (toPxError)', () async {
+    Map<String, dynamic> failedAddress = {
+      "Name": "ToFailAddress",
+    };
+
+    // Check if ProffixException is thrown
+
+    expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress).c,
+        ProffixException().toPxError());
+  }); */
+
+  test('Test Error on Create', () async {
+    Map<String, dynamic> failedAddress = {
+      "Name": "ToFailAddress",
+    };
+
+    // Check if ProffixException is thrown
+    expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress),
+        throwsA(isA<ProffixException>()));
   });
   test('Logout', () async {
     var lgout = await validClient.logout();
     expect(lgout.statusCode, 204);
   });
 
+  test('Check convertPxTimeToTime', () async {
+    var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
+    var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
+    expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
+  });
   test('Failed Login', () async {
     var invalidClient = ProffixClient(
         database: 'DEMODBPX5',

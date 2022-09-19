@@ -239,9 +239,13 @@ class ProffixClient implements BaseProffixClient {
               body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
 
-      // Update PxSessionId
-      setPxSessionId(resp.headers["pxsessionid"]);
-      return resp;
+      if (resp.statusCode != 201) {
+        throw ProffixException(body: resp.body, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers["pxsessionid"]);
+        return resp;
+      }
     } catch (e) {
       if (e is Exception) {
         rethrow;
@@ -274,10 +278,13 @@ class ProffixClient implements BaseProffixClient {
               body: jsonEncode(data))
           .timeout(Duration(seconds: _options.timeout));
 
-      // Update PxSessionId
-      setPxSessionId(resp.headers["pxsessionid"]);
-
-      return resp;
+      if (resp.statusCode != 204) {
+        throw ProffixException(body: resp.body, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers["pxsessionid"]);
+        return resp;
+      }
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -309,11 +316,13 @@ class ProffixClient implements BaseProffixClient {
               headers: headers,
               body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
-
-      // Update PxSessionId
-      setPxSessionId(resp.headers["pxsessionid"]);
-
-      return resp;
+      if (resp.statusCode != 204) {
+        throw ProffixException(body: resp.body, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers["pxsessionid"]);
+        return resp;
+      }
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -400,7 +409,6 @@ class ProffixClient implements BaseProffixClient {
 
   /// Manually sets the PxSessionId
   void setPxSessionId(String? pxsessionid) {
-    print(pxsessionid);
     _pxSessionID = pxsessionid!;
   }
 
