@@ -165,7 +165,7 @@ void main() {
   });
   test('Failed Login', () async {
     var invalidClient = ProffixClient(
-        database: 'DEMODBPX5',
+        database: envVars['PX_DB'].toString(),
         restURL: envVars['PX_URL'].toString(),
         username: envVars['PX_USER'].toString(),
         password: ProffixHelpers().convertSHA256("nonvalidlogin"),
