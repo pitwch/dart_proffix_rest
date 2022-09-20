@@ -16,8 +16,9 @@ import 'package:dotenv/dotenv.dart';
 
 void main() {
   var envVars = DotEnv(includePlatformEnvironment: true)..load();
+
   var validClient = ProffixClient(
-      database: "DEMODB",
+      database: envVars['PX_DB'].toString(),
       restURL: envVars['PX_URL'].toString(),
       username: envVars['PX_USER'].toString(),
       password: ProffixHelpers().convertSHA256(envVars['PX_PASS'].toString()),
@@ -165,7 +166,7 @@ void main() {
   });
   test('Failed Login', () async {
     var invalidClient = ProffixClient(
-        database: "DEMODB",
+        database: envVars['PX_DB'].toString(),
         restURL: envVars['PX_URL'].toString(),
         username: envVars['PX_USER'].toString(),
         password: ProffixHelpers().convertSHA256("nonvalidlogin"),

@@ -44,6 +44,7 @@ jobs:
           PX_URL: ${{ secrets.PX_URL }}
           PX_USER: ${{ secrets.PX_USER }}
           PX_PASS: ${{ secrets.PX_PASS }}
+          PX_DB: ${{ secrets.PX_DB }}
       - name: Upload Coverage Results
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
