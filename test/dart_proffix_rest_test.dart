@@ -16,7 +16,6 @@ import 'package:dotenv/dotenv.dart';
 
 void main() {
   var envVars = DotEnv(includePlatformEnvironment: true)..load();
-
   var validClient = ProffixClient(
       database: envVars['PX_DB'].toString(),
       restURL: envVars['PX_URL'].toString(),
