@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.0.7
+
+- Add Exceptions
+- Upgrade tests
+
 ## v0.0.6
 
 - Add detailled docs
