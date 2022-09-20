@@ -26,18 +26,22 @@ class ProffixException implements Exception {
     } else if (body == "") {
       return "ProffixException";
     } else {
-      var jsonBody = jsonDecode(body.toString());
-      var message = jsonBody["Message"];
-      List<String> fieldArray = [];
-      //var type = jsonBody["Type"];
-      var fields = jsonBody["Fields"];
-      if (fields != null) {
-        for (var field in fields) {
-          fieldArray.add(field["Name"].toString());
+      try {
+        var jsonBody = jsonDecode(body.toString());
+        var message = jsonBody["Message"];
+        List<String> fieldArray = [];
+        //var type = jsonBody["Type"];
+        var fields = jsonBody["Fields"];
+        if (fields != null) {
+          for (var field in fields) {
+            fieldArray.add(field["Name"].toString());
+          }
+          return message + " (" + fieldArray.join(",") + ")";
         }
-        return message + " (" + fieldArray.join(",") + ")";
+        return message;
+      } catch (e) {
+        return body.toString();
       }
-      return message;
     }
   }
 

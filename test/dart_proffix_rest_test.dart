@@ -164,7 +164,7 @@ void main() {
     var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
     expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
   });
-  test('Failed Login', () async {
+  test('Failed Login (Wrong Password)', () async {
     var invalidClient = ProffixClient(
         database: envVars['PX_DB'].toString(),
         restURL: envVars['PX_URL'].toString(),
@@ -175,6 +175,20 @@ void main() {
 
     // Check if ProffixException is thrown
     expect(() => invalidClient.get(endpoint: "ADR/Adresse"),
+        throwsA(isA<ProffixException>()));
+  });
+
+  test('Failed Login (Wrong URL)', () async {
+    var invalidClient2 = ProffixClient(
+        database: envVars['PX_DB'].toString(),
+        restURL: "https://sdfhdfhsdfsfe.ch:12323",
+        username: envVars['PX_USER'].toString(),
+        password: ProffixHelpers().convertSHA256("nonvalidlogin"),
+        modules: ["VOL"],
+        options: ProffixRestOptions(volumeLicence: true));
+
+    // Check if ProffixException is thrown
+    expect(() => invalidClient2.get(endpoint: "ADR/Adresse"),
         throwsA(isA<ProffixException>()));
   });
 }

@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.0.8
+
+- Fix Exception for SocketExceptions (wrong url)
+- Upgrade tests
+
 ## v0.0.7
 
 - Add Exceptions

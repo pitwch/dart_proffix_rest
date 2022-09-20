@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:http/http.dart';
@@ -125,20 +126,20 @@ class ProffixClient implements BaseProffixClient {
           headers: {
             'content-type': 'application/json'
           }).timeout(Duration(seconds: _options.timeout));
-
       switch (loginResponse.statusCode) {
         case 201:
           _pxSessionID = loginResponse.headers["pxsessionid"]!;
           return loginResponse;
         default:
           throw ProffixException(
-              body: loginResponse.body, statusCode: loginResponse.statusCode);
+              body: jsonEncode(loginResponse.body),
+              statusCode: loginResponse.statusCode);
       }
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
+      if (e is SocketException) {
+        throw ProffixException(body: e.toString());
       }
-      throw Result.error(e.toString());
+      throw ProffixException(body: e.toString());
     }
   }
 
