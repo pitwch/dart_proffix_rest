@@ -137,7 +137,7 @@ void main() {
   test('Check check login Endpoint', () async {
     var checkReq = await validClient.check();
     // SessionId on End should be same as on start
-    expect(checkReq.statusCode, 201);
+    expect(checkReq.statusCode, 200);
   });
 
   /*  test('Test Error on Create (toPxError)', () async {

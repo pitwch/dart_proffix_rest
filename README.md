@@ -163,8 +163,8 @@ Prüft die Login - Credentials und gibt bei Fehlern eine Exception aus.
 
  var check = await pxClient.check();
 
- // If statusCode = 201 -> Success
- if(check.statusCode = 201){
+ // If statusCode = 200 -> Success
+ if(check.statusCode = 200){
   print("OK")
 // Else show exception
  } else {
