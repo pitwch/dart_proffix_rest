@@ -399,6 +399,46 @@ class ProffixClient implements BaseProffixClient {
     }
   }
 
+  /// Utility method to check valid credentials
+  @override
+  Future<Response> check() async {
+    // return await call('get', path: path, headers: headers, params: params);
+    String pxsessionid = await getPxSessionId();
+    Map<String, String> headers = {};
+    headers.addAll({
+      'content-type': 'application/json',
+      'PxSessionId': pxsessionid,
+    });
+
+    try {
+      Map<String, String> params = {"Limit": "1", "Fields": "AdressNr"};
+      final getUri = _getUriUrl(
+          buildUriPx(restURL,
+              [_options.apiPrefix, _options.version, "ADR/Adresse"]).toString(),
+          params);
+
+      var resp = await _httpClient
+          .get(getUri, headers: headers)
+          .timeout(Duration(seconds: _options.timeout));
+
+      switch (resp.statusCode) {
+        case 200:
+          // Update PxSessionId
+          setPxSessionId(resp.headers["pxsessionid"]);
+
+          return resp;
+        default:
+          throw Result.error(
+              ProffixException(body: resp.body, statusCode: resp.statusCode));
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
+    }
+  }
+
   /// This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
   static Uri _getUriUrl(String url, Map<String, dynamic> queryParameters) {
     if (queryParameters.isEmpty) {

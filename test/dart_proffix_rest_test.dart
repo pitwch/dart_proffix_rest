@@ -134,6 +134,12 @@ void main() {
     expect(tmpPxSessionId, pxsessionidend);
   });
 
+  test('Check check login Endpoint', () async {
+    var checkReq = await validClient.check();
+    // SessionId on End should be same as on start
+    expect(checkReq.statusCode, 201);
+  });
+
   /*  test('Test Error on Create (toPxError)', () async {
     Map<String, dynamic> failedAddress = {
       "Name": "ToFailAddress",
@@ -154,6 +160,7 @@ void main() {
     expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress),
         throwsA(isA<ProffixException>()));
   });
+
   test('Logout', () async {
     var lgout = await validClient.logout();
     expect(lgout.statusCode, 204);

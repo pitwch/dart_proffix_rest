@@ -155,6 +155,24 @@ Folgende unterschiedlichen Methoden sind mit dem Wrapper möglich:
 
 #### Spezielle Endpunkte
 
+##### Check
+
+Prüft die Login - Credentials und gibt bei Fehlern eine Exception aus.
+
+```dart
+
+ var check = await pxClient.check();
+
+ // If statusCode = 201 -> Success
+ if(check.statusCode = 201){
+  print("OK")
+// Else show exception
+ } else {
+  print(check)
+ }
+
+```
+
 ##### Logout
 
 Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei. Zusätzlich wird der Dart Client geschlossen.
