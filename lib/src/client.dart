@@ -40,10 +40,9 @@ class ProffixClient implements BaseProffixClient {
       _httpClient = httpClient;
     }
     if (options == null) {
-      _options = ProffixRestOptions();
-      _options.apiPrefix = "pxapi";
-      _options.loginEndpoint = "PRO/Login";
-      _options.volumeLicence = false;
+      ProffixRestOptions pxoptions = ProffixRestOptions(
+          apiPrefix: "pxapi", loginEndpoint: "PRO/Login", volumeLicence: false);
+      _options = pxoptions;
     } else {
       _options = options;
     }
