@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.1.1
+
+- Make helpers and options public
+- Add check() method for checking login
+
 ## v0.0.8
 
 - Fix Exception for SocketExceptions (wrong url)

@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
-import 'package:dart_proffix_rest/src/client_options.dart';
-import 'package:dart_proffix_rest/src/helpers.dart';
 import 'package:test/test.dart';
 
 import 'package:dotenv/dotenv.dart';

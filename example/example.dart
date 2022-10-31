@@ -1,8 +1,6 @@
 import 'dart:convert';
 import "package:crypto/crypto.dart";
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
-import 'package:dart_proffix_rest/src/client_options.dart';
-import 'package:dart_proffix_rest/src/helpers.dart';
 
 void main() async {
   // Passwort hashen
