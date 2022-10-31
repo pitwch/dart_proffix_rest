@@ -5,7 +5,6 @@ import 'package:async/async.dart';
 import 'package:http/http.dart';
 
 import 'client_base.dart';
-import 'client_options.dart';
 import '../dart_proffix_rest.dart';
 
 class ProffixClient implements BaseProffixClient {
