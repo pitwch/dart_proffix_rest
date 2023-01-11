@@ -68,6 +68,23 @@ void main() {
     expect(count > 0, true);
   });
 
+/*   test('Get Address Repeated Fast', () async {
+    var i = 0;
+    while (i < 20) {
+      i++;
+      // Get Request Test with Filter and Limit Parameters
+      var getReq = await validClient.get(endpoint: "ADR/Adresse", params: {
+        "Filter": "Name=='APITest'",
+        "Fields": "AdressNr,Name,Vorname,Ort,PLZ",
+        "Sort": "-AdressNr",
+        "Limit": "4"
+      });
+      print("Run Loop $i");
+
+      expect(getReq.statusCode, 200);
+    }
+  }); */
+
   test('Update Address (Patch)', () async {
     tmpAddress["AdressNr"] = tmpAdressNr;
     tmpAddress["Vorname"] = "Updated PATCH";

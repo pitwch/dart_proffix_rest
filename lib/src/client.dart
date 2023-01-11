@@ -454,21 +454,30 @@ class ProffixClient implements BaseProffixClient {
   /// Returns the used PxSessionId
   Future<String> getPxSessionId() async {
     if (_pxSessionID == "") {
-      var lgn = await login(
-          username: username,
-          password: password,
-          restURL: restURL,
-          database: database,
-          options: _options,
-          modules: modules);
+      try {
+        var lgn = await login(
+            username: username,
+            password: password,
+            restURL: restURL,
+            database: database,
+            options: _options,
+            modules: modules);
 
-      if (lgn.statusCode != 201) {
-        throw ProffixException(body: lgn.body, statusCode: lgn.statusCode);
+        if (lgn.statusCode != 201) {
+          throw Result.error(
+              ProffixException(body: lgn.body, statusCode: lgn.statusCode));
+        }
+
+        String pxsessionid = lgn.headers["pxsessionid"].toString();
+        setPxSessionId(pxsessionid);
+
+        return pxsessionid;
+      } catch (e) {
+        if (e is Exception) {
+          rethrow;
+        }
+        throw ProffixException(body: e.toString());
       }
-      String pxsessionid = lgn.headers["pxsessionid"].toString();
-
-      setPxSessionId(pxsessionid);
-      return pxsessionid;
     }
     return _pxSessionID;
   }
