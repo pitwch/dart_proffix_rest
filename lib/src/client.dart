@@ -219,6 +219,7 @@ class ProffixClient implements BaseProffixClient {
   Future<Response> post({
     String endpoint = '',
     Map<String, dynamic>? data,
+    Map<String, dynamic>? params,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
@@ -230,12 +231,13 @@ class ProffixClient implements BaseProffixClient {
     });
 
     try {
+      final postUri = _getUriUrl(
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+              .toString(),
+          params!);
+
       var resp = await _httpClient
-          .post(
-              buildUriPx(
-                  restURL, [_options.apiPrefix, _options.version, endpoint]),
-              headers: headers,
-              body: json.encode(data))
+          .post(postUri, headers: headers, body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
 
       if (resp.statusCode != 201) {

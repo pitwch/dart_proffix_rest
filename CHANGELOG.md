@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.1.4
+
+- Add Params to Post method
+- Fix exceptions
+
 ## v0.1.1
 
 - Make helpers and options public
