@@ -82,14 +82,16 @@ class ProffixClient implements BaseProffixClient {
   String _pxSessionID = "";
 
   // Utilities
-  Uri buildUriPx(String base, List<String> frags) {
+  Uri buildUriPx(String base, List<String>? frags) {
     Uri q = Uri.parse(base);
     q.removeFragment;
     List<String> cleanedFrags = [];
-    for (String frag in frags) {
-      List<String> subFrags = frag.split("/");
-      for (String subFrag in subFrags) {
-        cleanedFrags.add(subFrag);
+    if (frags != null) {
+      for (String frag in frags) {
+        List<String> subFrags = frag.split("/");
+        for (String subFrag in subFrags) {
+          cleanedFrags.add(subFrag);
+        }
       }
     }
     return Uri(
@@ -234,7 +236,7 @@ class ProffixClient implements BaseProffixClient {
       final postUri = _getUriUrl(
           buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
               .toString(),
-          params!);
+          params);
 
       var resp = await _httpClient
           .post(postUri, headers: headers, body: json.encode(data))
@@ -440,8 +442,8 @@ class ProffixClient implements BaseProffixClient {
   }
 
   /// This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
-  static Uri _getUriUrl(String url, Map<String, dynamic> queryParameters) {
-    if (queryParameters.isEmpty) {
+  static Uri _getUriUrl(String url, Map<String, dynamic>? queryParameters) {
+    if (queryParameters != null && queryParameters.isEmpty) {
       return Uri.parse(url);
     }
     final uri = Uri.parse(url);
