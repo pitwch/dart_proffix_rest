@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.1.6
+
+- Otimize Status Response
+
 ## v0.1.5
 
 - Fix param null exception
