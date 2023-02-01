@@ -242,7 +242,7 @@ class ProffixClient implements BaseProffixClient {
           .post(postUri, headers: headers, body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
 
-      if (resp.statusCode > 200 || resp.statusCode < 300) {
+      if (resp.statusCode < 200 || resp.statusCode > 300) {
         throw ProffixException(body: resp.body, statusCode: resp.statusCode);
       } else {
         // Update PxSessionId
@@ -281,7 +281,7 @@ class ProffixClient implements BaseProffixClient {
               body: jsonEncode(data))
           .timeout(Duration(seconds: _options.timeout));
 
-      if (resp.statusCode > 200 || resp.statusCode < 300) {
+      if (resp.statusCode < 200 || resp.statusCode > 300) {
         throw ProffixException(body: resp.body, statusCode: resp.statusCode);
       } else {
         // Update PxSessionId
@@ -319,7 +319,7 @@ class ProffixClient implements BaseProffixClient {
               headers: headers,
               body: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
-      if (resp.statusCode > 200 || resp.statusCode < 300) {
+      if (resp.statusCode < 200 || resp.statusCode > 300) {
         throw ProffixException(body: resp.body, statusCode: resp.statusCode);
       } else {
         // Update PxSessionId

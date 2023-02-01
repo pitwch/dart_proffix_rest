@@ -1,8 +1,12 @@
 # Release Note
 
+## v0.1.7
+
+- Fix Status Response
+
 ## v0.1.6
 
-- Otimize Status Response
+- Optimize Status Response
 
 ## v0.1.5
 
