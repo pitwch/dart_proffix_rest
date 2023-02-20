@@ -18,40 +18,40 @@ abstract class BaseProffixClient {
   // });
 
   /// An alias of ProffixClient.call('get')
-  Future<Either<Response, ProffixException>> get({
+  Future<Either<ProffixException, Response>> get({
     required String endpoint,
     Map<String, dynamic>? params = const {},
   });
 
   /// An alias of ProffixClient.call('post')
-  Future<Either<Response, ProffixException>> post({
+  Future<Either<ProffixException, Response>> post({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('patch')
-  Future<Either<Response, ProffixException>> patch({
+  Future<Either<ProffixException, Response>> patch({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('put')
-  Future<Either<Response, ProffixException>> put({
+  Future<Either<ProffixException, Response>> put({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('delete')
-  Future<Either<Response, ProffixException>> delete({
+  Future<Either<ProffixException, Response>> delete({
     required String endpoint,
   });
 
   /// An alias of ProffixClient.getList('getList')
-/*   Future<Either<Response, ProffixException>> getList({
+  Future<Either<ProffixException, Response>> getList({
     required int listeNr,
     Map<String, dynamic>? data,
-  }); */
+  });
 
   /// An alias of ProffixClient.getList('getList')
-  Future<Either<Response, ProffixException>> check();
+  Future<Either<ProffixException, Response>> check();
 }

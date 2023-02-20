@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
+import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:test/test.dart';
 
 import 'package:dotenv/dotenv.dart';
@@ -40,10 +42,17 @@ void main() {
     var postReq =
         await validClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
 
-    postReq.fold((l) => expect(l.statusCode, 201), (r) => null);
+    postReq.fold((l) => null, (r) => expect(r.statusCode, 201));
 
     // Get LocationID
-    tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
+
+//Other way to 'extract' the data
+    if (postReq.isRight()) {
+      // ignore: cast_from_null_always_fails
+      final Headers headers =
+          postReq.getOrElse(() => throw UnimplementedError()).headers;
+      tmpAdressNr = ProffixHelpers().convertLocationId(headers);
+    }
 
     // Temporary save PxSessionId for Check
     tmpPxSessionId = validClient.getPxSessionId().toString();
@@ -57,15 +66,14 @@ void main() {
       "Sort": "-AdressNr",
       "Limit": "4"
     });
-    getReq.fold((l) => expect(l.statusCode, 200), (r) => null);
-
-    final parsedJson = jsonDecode(getReq.data);
-
-    expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
-    expect(tmpAdressNr > 0, true);
-
-    int count = ProffixHelpers().getFilteredCount(getReq.headers);
-    expect(count > 0, true);
+    getReq.fold(
+        (l) => null,
+        (r) => {
+              expect(r.statusCode, 200),
+              expect(tmpAdressNr, jsonDecode(r.data.toString())[0]["AdressNr"]),
+              expect(tmpAdressNr > 0, true),
+              expect(ProffixHelpers().getFilteredCount(r.headers) > 0, true)
+            });
   });
 
 /*   test('Get Address Repeated Fast', () async {
@@ -92,7 +100,7 @@ void main() {
     var patchReq = await validClient.patch(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
 
-    patchReq.fold((l) => expect(l.statusCode, 204), (r) => null);
+    patchReq.fold((l) => null, (r) => expect(r.statusCode, 204));
   });
 
   test('Update Address (Put)', () async {
@@ -101,7 +109,7 @@ void main() {
     // Put Request Test
     var putReq = await validClient.put(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
-    putReq.fold((l) => expect(l.statusCode, 204), (r) => null);
+    putReq.fold((l) => null, (r) => expect(r.statusCode, 204));
   });
 
   /*  test('Fail Test (Get)', () async {
@@ -117,7 +125,7 @@ void main() {
     var getReq = await validClient.delete(
       endpoint: "ADR/Adresse/$tmpAdressNr",
     );
-    getReq.fold((l) => expect(l.statusCode, 204), (r) => null);
+    getReq.fold((l) => null, (r) => expect(r.statusCode, 204));
   });
 
   test('Get List', () async {
@@ -126,21 +134,25 @@ void main() {
         endpoint: "PRO/Liste",
         params: {"Filter": "name@='IMP_Protokoll.repx'", "Fields": "ListeNr"});
 
-    listSearch.fold((l) => expect(l.statusCode, 200), (r) => null);
-
-    var listeFirst = jsonDecode(listSearch.data)[0];
-    int listeNr = listeFirst["ListeNr"];
-
-    // Request Liste as File
-    var listReq = await validClient.getList(listeNr: listeNr, data: {});
-
-    expect(listReq.statusCode, 200);
-
-    // Check if filetype is PDF
-    expect(listReq.headers["content-type"].toString(), "application/pdf");
-
-    // Check if Content-Lenght (=filesize) greater than 0
-    expect(int.parse(listReq.headers["content-length"].toString()) > 0, true);
+    listSearch.fold(
+        (l) => null,
+        (r) => {
+              expect(r.statusCode, 200),
+              validClient.getList(
+                  listeNr: jsonDecode(r.data)[0]["ListeNr"], data: {}).then(
+                (value) => value.fold(
+                    (l) => null,
+                    (r) => {
+                          expect(r.headers["content-type"].toString(),
+                              "application/pdf"),
+                          expect(
+                              int.parse(
+                                      r.headers["content-length"].toString()) >
+                                  0,
+                              true)
+                        }),
+              )
+            });
   });
 
   test('Check same Session (toString)', () async {

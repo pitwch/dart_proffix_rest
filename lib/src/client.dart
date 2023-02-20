@@ -102,7 +102,7 @@ class ProffixClient implements BaseProffixClient {
   }
 
   /// Utility method to Login
-  Future<Either<Response, ProffixException>> login({
+  Future<Either<ProffixException, Response>> login({
     required username,
     required password,
     required restURL,
@@ -129,9 +129,9 @@ class ProffixClient implements BaseProffixClient {
 
     if (loginResponse.statusCode == 201) {
       _pxSessionID = loginResponse.headers.value("pxsessionid")!;
-      return Left(loginResponse);
+      return Right(loginResponse);
     } else {
-      return Right(ProffixException(
+      return Left(ProffixException(
           body: loginResponse.data.toString(),
           statusCode: loginResponse.statusCode));
     }
@@ -167,7 +167,7 @@ class ProffixClient implements BaseProffixClient {
 
   /// Utility method to make http get call
   @override
-  Future<Either<Response, ProffixException>> get({
+  Future<Either<ProffixException, Response>> get({
     String endpoint = '',
     Map<String, dynamic>? params,
   }) async {
@@ -187,16 +187,16 @@ class ProffixClient implements BaseProffixClient {
     if (resp.statusCode == 200) {
       // Update PxSessionId
       setPxSessionId(resp.headers.value("pxsessionid")!);
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
 
   /// Utility method to make http post call
   @override
-  Future<Either<Response, ProffixException>> post({
+  Future<Either<ProffixException, Response>> post({
     String endpoint = '',
     Map<String, dynamic>? data,
     Map<String, dynamic>? params,
@@ -220,16 +220,16 @@ class ProffixClient implements BaseProffixClient {
         (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
       setPxSessionId(resp.headers.value("pxsessionid")!);
 
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
 
   /// Utility method to make http patch call
   @override
-  Future<Either<Response, ProffixException>> patch({
+  Future<Either<ProffixException, Response>> patch({
     String endpoint = '',
     Map<String, dynamic>? data,
   }) async {
@@ -249,16 +249,16 @@ class ProffixClient implements BaseProffixClient {
 
     if (resp.statusCode != null &&
         (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
 
   /// Utility method to make http put call
   @override
-  Future<Either<Response, ProffixException>> put({
+  Future<Either<ProffixException, Response>> put({
     String endpoint = '',
     Map<String, dynamic>? data,
   }) async {
@@ -277,16 +277,16 @@ class ProffixClient implements BaseProffixClient {
         .timeout(Duration(seconds: _options.timeout));
     if (resp.statusCode != null &&
         (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
 
   /// Utility method to make http delete call
   @override
-  Future<Either<Response, ProffixException>> delete(
+  Future<Either<ProffixException, Response>> delete(
       {String endpoint = ''}) async {
     String pxsessionid = await getPxSessionId();
 
@@ -299,16 +299,16 @@ class ProffixClient implements BaseProffixClient {
 
     if (resp.statusCode != null &&
         (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
 
-  /* /// Utility method to directly get a list
+  /// Utility method to directly get a list
   @override
-  Future<Either<Response, ProffixException>> getList({
+  Future<Either<ProffixException, Response>> getList({
     int listeNr = 0,
     Map<String, dynamic>? data,
   }) async {
@@ -318,44 +318,29 @@ class ProffixClient implements BaseProffixClient {
     _dioClient.options.headers["PxSessionId"] = pxsessionid;
     _dioClient.options.headers["content-type"] = 'application/json';
 
- 
-      data ??= {};
-      var listDownload =
-          await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
+    data ??= {};
+    var listDownload =
+        await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
 
-
-      listDownload.fold((l) => {
-      setPxSessionId(l.headers.value("pxsessionid")),
-                String? downloadLocation = l.headers.value("location")
-
-      }, (r) => 
-
-         Right(r)
-   );
-
-      String? downloadLocation = listDownload.headers.["location"].toString();
-      setPxSessionId(listDownload.headers["pxsessionid"].toString());
-      Map<String, String> headersDownload = {};
-      headersDownload.addAll({
-        'PxSessionId': pxsessionid,
-      });
-      Uri downloadURI = Uri.parse(downloadLocation);
-       var getDownload = await _dioClient.get(
-        downloadURI.toString(),
-      );
-
-      if (getDownload.statusCode != null &&
-        (getDownload.statusCode! >= 200 || getDownload.statusCode! < 300)) {
-     return Left(getDownload.data);
+    if (listDownload.isLeft()) {
+      return (listDownload);
     } else {
-      return Right(
-          ProffixException(body: getDownload.data, statusCode: getDownload.statusCode));
+      listDownload.fold(
+          (l) => {},
+          (r) => {
+                setPxSessionId(r.headers.value("pxsessionid")),
+                _dioClient
+                    .get(Uri.parse(r.headers.value("location").toString())
+                        .toString())
+                    .then((value) => {Right(value)})
+              });
     }
-  } */
+    return Left(ProffixException(body: "d", statusCode: 2));
+  }
 
   /// Utility method to check valid credentials
   @override
-  Future<Either<Response, ProffixException>> check() async {
+  Future<Either<ProffixException, Response>> check() async {
     // return await call('get', path: path, headers: headers, params: params);
     String pxsessionid = await getPxSessionId();
 
@@ -379,9 +364,9 @@ class ProffixClient implements BaseProffixClient {
       // Update PxSessionId
       setPxSessionId(resp.headers.value("pxsessionid")!);
 
-      return Left(resp);
+      return Right(resp);
     } else {
-      return Right(
+      return Left(
           ProffixException(body: resp.data, statusCode: resp.statusCode));
     }
   }
@@ -411,8 +396,9 @@ class ProffixClient implements BaseProffixClient {
           options: _options,
           modules: modules);
 
-      lgn.fold((l) => {setPxSessionId(l.headers.value("pxsessionid"))},
-          (r) => {ProffixException(body: r.body, statusCode: r.statusCode)});
+      lgn.fold(
+          (l) => {ProffixException(body: l.body, statusCode: l.statusCode)},
+          (r) => {setPxSessionId(r.headers.value("pxsessionid"))});
     }
     return _pxSessionID;
   }

@@ -32,12 +32,12 @@ void main() async {
       await pxClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
   int q;
   createAddress.fold(
-      (l) => {
-            q = ProffixHelpers().convertLocationId(l.headers),
+      (l) => {},
+      (r) => {
+            q = ProffixHelpers().convertLocationId(r.headers),
             print("Die neue Adresse wurde mit AdressNr $q erstellt"
                 // Alle Adressen, welche wie 'Muster' lauten abrufen
                 )
-          },
-      (r) => {print(r)});
+          });
   // AdresseNr der neu erstellen Adresse anzeigen
 }
