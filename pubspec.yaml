@@ -9,9 +9,10 @@ environment:
 dependencies:
   async: ^2.9.0
   crypto: ^3.0.2
+  dartz: ^0.10.1
+  dio: ^5.0.0
   enum_to_string: ^2.0.1
   equatable: ^2.0.3
-  http: ^0.13.4
   intl: ^0.18.0
 
 dev_dependencies:

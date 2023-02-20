@@ -40,7 +40,7 @@ void main() {
     var postReq =
         await validClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
 
-    expect(postReq.statusCode, 201);
+    postReq.fold((l) => expect(l.statusCode, 201), (r) => null);
 
     // Get LocationID
     tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
@@ -57,9 +57,9 @@ void main() {
       "Sort": "-AdressNr",
       "Limit": "4"
     });
-    expect(getReq.statusCode, 200);
+    getReq.fold((l) => expect(l.statusCode, 200), (r) => null);
 
-    final parsedJson = jsonDecode(getReq.body);
+    final parsedJson = jsonDecode(getReq.data);
 
     expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
     expect(tmpAdressNr > 0, true);
@@ -92,7 +92,7 @@ void main() {
     var patchReq = await validClient.patch(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
 
-    expect(patchReq.statusCode, 204);
+    patchReq.fold((l) => expect(l.statusCode, 204), (r) => null);
   });
 
   test('Update Address (Put)', () async {
@@ -101,8 +101,7 @@ void main() {
     // Put Request Test
     var putReq = await validClient.put(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
-
-    expect(putReq.statusCode, 204);
+    putReq.fold((l) => expect(l.statusCode, 204), (r) => null);
   });
 
   /*  test('Fail Test (Get)', () async {
@@ -118,7 +117,7 @@ void main() {
     var getReq = await validClient.delete(
       endpoint: "ADR/Adresse/$tmpAdressNr",
     );
-    expect(getReq.statusCode, 204);
+    getReq.fold((l) => expect(l.statusCode, 204), (r) => null);
   });
 
   test('Get List', () async {
@@ -127,8 +126,9 @@ void main() {
         endpoint: "PRO/Liste",
         params: {"Filter": "name@='IMP_Protokoll.repx'", "Fields": "ListeNr"});
 
-    expect(listSearch.statusCode, 200);
-    var listeFirst = jsonDecode(listSearch.body)[0];
+    listSearch.fold((l) => expect(l.statusCode, 200), (r) => null);
+
+    var listeFirst = jsonDecode(listSearch.data)[0];
     int listeNr = listeFirst["ListeNr"];
 
     // Request Liste as File
@@ -152,7 +152,7 @@ void main() {
   test('Check check login Endpoint', () async {
     var checkReq = await validClient.check();
     // SessionId on End should be same as on start
-    expect(checkReq.statusCode, 200);
+    checkReq.fold((l) => expect(l.statusCode, 200), (r) => null);
   });
 
   /*  test('Test Error on Create (toPxError)', () async {

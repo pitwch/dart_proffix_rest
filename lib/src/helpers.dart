@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 
 class ProffixHelpers {
   /// Convert the header of response [header] to amount of results of response.
-  int getFilteredCount(Map<String, String> header) {
-    String? pxmetadata = header["pxmetadata"];
+  int getFilteredCount(Headers header) {
+    String? pxmetadata = header.value("pxmetadata");
+
     if (pxmetadata != "") {
       return jsonDecode(pxmetadata!)["FilteredCount"];
     } else {
@@ -14,8 +16,8 @@ class ProffixHelpers {
   }
 
   /// Convert the header of response [header] to primary key created / updated object.
-  int convertLocationId(Map<String, String> header) {
-    String? location = header["location"];
+  int convertLocationId(Headers header) {
+    String? location = header.value("location");
     if (location != "" && location != null) {
       String lastPath = Uri.parse(location).pathSegments.last;
       return int.parse(lastPath);

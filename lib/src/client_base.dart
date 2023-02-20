@@ -1,3 +1,6 @@
+import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
+
 import '../dart_proffix_rest.dart';
 
 abstract class BaseProffixClient {
@@ -15,40 +18,40 @@ abstract class BaseProffixClient {
   // });
 
   /// An alias of ProffixClient.call('get')
-  Future<Response> get({
+  Future<Either<Response, ProffixException>> get({
     required String endpoint,
     Map<String, dynamic>? params = const {},
   });
 
   /// An alias of ProffixClient.call('post')
-  Future<Response> post({
+  Future<Either<Response, ProffixException>> post({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('patch')
-  Future<Response> patch({
+  Future<Either<Response, ProffixException>> patch({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('put')
-  Future<Response> put({
+  Future<Either<Response, ProffixException>> put({
     required String endpoint,
     Map<String, dynamic>? data,
   });
 
   /// An alias of ProffixClient.call('delete')
-  Future<Response> delete({
+  Future<Either<Response, ProffixException>> delete({
     required String endpoint,
   });
 
   /// An alias of ProffixClient.getList('getList')
-  Future<Response> getList({
+/*   Future<Either<Response, ProffixException>> getList({
     required int listeNr,
     Map<String, dynamic>? data,
-  });
+  }); */
 
   /// An alias of ProffixClient.getList('getList')
-  Future<Response> check();
+  Future<Either<Response, ProffixException>> check();
 }
