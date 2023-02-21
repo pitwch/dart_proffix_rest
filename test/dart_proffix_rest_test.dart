@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
-import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 import 'package:test/test.dart';
 
 import 'package:dotenv/dotenv.dart';
@@ -23,6 +20,7 @@ void main() {
       username: envVars['PX_USER'].toString(),
       password: ProffixHelpers().convertSHA256(envVars['PX_PASS'].toString()),
       modules: ["VOL"],
+      enableLogger: false,
       options: ProffixRestOptions(volumeLicence: true));
 
   Map<String, dynamic> tmpAddress = {
@@ -42,17 +40,10 @@ void main() {
     var postReq =
         await validClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
 
-    postReq.fold((l) => null, (r) => expect(r.statusCode, 201));
+    expect(postReq.statusCode, 201);
 
     // Get LocationID
-
-//Other way to 'extract' the data
-    if (postReq.isRight()) {
-      // ignore: cast_from_null_always_fails
-      final Headers headers =
-          postReq.getOrElse(() => throw UnimplementedError()).headers;
-      tmpAdressNr = ProffixHelpers().convertLocationId(headers);
-    }
+    tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
 
     // Temporary save PxSessionId for Check
     tmpPxSessionId = validClient.getPxSessionId().toString();
@@ -66,32 +57,16 @@ void main() {
       "Sort": "-AdressNr",
       "Limit": "4"
     });
-    getReq.fold(
-        (l) => null,
-        (r) => {
-              expect(r.statusCode, 200),
-              expect(tmpAdressNr, jsonDecode(r.data.toString())[0]["AdressNr"]),
-              expect(tmpAdressNr > 0, true),
-              expect(ProffixHelpers().getFilteredCount(r.headers) > 0, true)
-            });
+    expect(getReq.statusCode, 200);
+
+    final parsedJson = getReq.data;
+
+    expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
+    expect(tmpAdressNr > 0, true);
+
+    int count = ProffixHelpers().getFilteredCount(getReq.headers);
+    expect(count > 0, true);
   });
-
-/*   test('Get Address Repeated Fast', () async {
-    var i = 0;
-    while (i < 20) {
-      i++;
-      // Get Request Test with Filter and Limit Parameters
-      var getReq = await validClient.get(endpoint: "ADR/Adresse", params: {
-        "Filter": "Name=='APITest'",
-        "Fields": "AdressNr,Name,Vorname,Ort,PLZ",
-        "Sort": "-AdressNr",
-        "Limit": "4"
-      });
-      print("Run Loop $i");
-
-      expect(getReq.statusCode, 200);
-    }
-  }); */
 
   test('Update Address (Patch)', () async {
     tmpAddress["AdressNr"] = tmpAdressNr;
@@ -100,7 +75,7 @@ void main() {
     var patchReq = await validClient.patch(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
 
-    patchReq.fold((l) => null, (r) => expect(r.statusCode, 204));
+    expect(patchReq.statusCode, 204);
   });
 
   test('Update Address (Put)', () async {
@@ -109,13 +84,13 @@ void main() {
     // Put Request Test
     var putReq = await validClient.put(
         endpoint: "ADR/Adresse/$tmpAdressNr", data: tmpAddress);
-    putReq.fold((l) => null, (r) => expect(r.statusCode, 204));
+
+    expect(putReq.statusCode, 204);
   });
 
   /*  test('Fail Test (Get)', () async {
     // Put Request Test
     var putReq = await validClient.get(endpoint: "ADR/Adresse/212121");
-
     expect(putReq.statusCode, 404);
   }); */
 
@@ -125,7 +100,7 @@ void main() {
     var getReq = await validClient.delete(
       endpoint: "ADR/Adresse/$tmpAdressNr",
     );
-    getReq.fold((l) => null, (r) => expect(r.statusCode, 204));
+    expect(getReq.statusCode, 204);
   });
 
   test('Get List', () async {
@@ -134,25 +109,21 @@ void main() {
         endpoint: "PRO/Liste",
         params: {"Filter": "name@='IMP_Protokoll.repx'", "Fields": "ListeNr"});
 
-    listSearch.fold(
-        (l) => null,
-        (r) => {
-              expect(r.statusCode, 200),
-              validClient.getList(
-                  listeNr: jsonDecode(r.data)[0]["ListeNr"], data: {}).then(
-                (value) => value.fold(
-                    (l) => null,
-                    (r) => {
-                          expect(r.headers["content-type"].toString(),
-                              "application/pdf"),
-                          expect(
-                              int.parse(
-                                      r.headers["content-length"].toString()) >
-                                  0,
-                              true)
-                        }),
-              )
-            });
+    expect(listSearch.statusCode, 200);
+    var listeFirst = (listSearch.data)[0];
+    int listeNr = listeFirst["ListeNr"];
+
+    // Request Liste as File
+    var listReq = await validClient.getList(listeNr: listeNr, data: {});
+
+    expect(listReq.statusCode, 200);
+
+    // Check if filetype is PDF
+    expect(listReq.headers.value("content-type").toString(), "application/pdf");
+
+    // Check if Content-Lenght (=filesize) greater than 0
+    expect(int.parse(listReq.headers.value("content-length").toString()) > 0,
+        true);
   });
 
   test('Check same Session (toString)', () async {
@@ -164,16 +135,14 @@ void main() {
   test('Check check login Endpoint', () async {
     var checkReq = await validClient.check();
     // SessionId on End should be same as on start
-    checkReq.fold((l) => expect(l.statusCode, 200), (r) => null);
+    expect(checkReq.statusCode, 200);
   });
 
   /*  test('Test Error on Create (toPxError)', () async {
     Map<String, dynamic> failedAddress = {
       "Name": "ToFailAddress",
     };
-
     // Check if ProffixException is thrown
-
     expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress).c,
         ProffixException().toPxError());
   }); */

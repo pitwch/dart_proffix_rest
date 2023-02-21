@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:dartz/dartz.dart';
+import 'package:async/async.dart';
+import 'package:dart_proffix_rest/dart_proffix_rest.dart';
+import 'package:dart_proffix_rest/src/client_base.dart';
 import 'package:dio/dio.dart';
-
-import 'client_base.dart';
-import '../dart_proffix_rest.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class ProffixClient implements BaseProffixClient {
   /// Creates a new instance of [ProffixClient]
@@ -30,6 +31,7 @@ class ProffixClient implements BaseProffixClient {
     this.modules,
     String? pxSessionID,
     ProffixRestOptions? options,
+    bool? enableLogger,
     Dio? dioClient,
   }) {
     if (dioClient == null) {
@@ -37,7 +39,6 @@ class ProffixClient implements BaseProffixClient {
     } else {
       _dioClient = dioClient;
     }
-
     if (options == null) {
       ProffixRestOptions pxoptions = ProffixRestOptions(
           apiPrefix: "pxapi", loginEndpoint: "PRO/Login", volumeLicence: false);
@@ -45,6 +46,18 @@ class ProffixClient implements BaseProffixClient {
     } else {
       _options = options;
     }
+
+    if (enableLogger == true) {
+      _dioClient.interceptors.add(PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: true,
+          error: true,
+          compact: false,
+          maxWidth: 90));
+    }
+    _dioClient.options.headers["user-agent"] = _options.userAgent;
 
     if (pxSessionID == null) {
       _pxSessionID = "";
@@ -57,7 +70,7 @@ class ProffixClient implements BaseProffixClient {
     }
   }
 
-  /// HTTP Client
+  /// Dio HTTP Client
   late Dio _dioClient;
 
   /// Proffix Rest Options
@@ -82,7 +95,7 @@ class ProffixClient implements BaseProffixClient {
   String _pxSessionID = "";
 
   // Utilities
-  Uri buildUriPx(String base, List<String>? frags) {
+  String buildUriPx(String base, List<String>? frags) {
     Uri q = Uri.parse(base);
     q.removeFragment;
     List<String> cleanedFrags = [];
@@ -95,14 +108,15 @@ class ProffixClient implements BaseProffixClient {
       }
     }
     return Uri(
-        scheme: q.scheme,
-        port: q.port,
-        host: q.host,
-        pathSegments: cleanedFrags);
+            scheme: q.scheme,
+            port: q.port,
+            host: q.host,
+            pathSegments: cleanedFrags)
+        .toString();
   }
 
   /// Utility method to Login
-  Future<Either<ProffixException, Response>> login({
+  Future<Response> login({
     required username,
     required password,
     required restURL,
@@ -111,29 +125,42 @@ class ProffixClient implements BaseProffixClient {
     modules,
     dioClient,
   }) async {
-    final loginUri = buildUriPx(
-        restURL, [options.apiPrefix, options.version, options.loginEndpoint]);
+    try {
+      final loginUri = buildUriPx(
+          restURL, [options.apiPrefix, options.version, options.loginEndpoint]);
 
-    final loginBody = {
-      "Benutzer": username,
-      "Passwort": password,
-      "Datenbank": {"Name": database},
-      "Module": modules
-    };
-    _dioClient.options.headers['content-Type'] = 'application/json';
+      final loginBody = {
+        "Benutzer": username,
+        "Passwort": password,
+        "Datenbank": {"Name": database},
+        "Module": modules
+      };
 
-    var loginResponse = await _dioClient.post(
-      loginUri.toString(),
-      data: loginBody,
-    );
+      _dioClient.options.contentType = Headers.jsonContentType;
+      _dioClient.options.responseType = ResponseType.json;
 
-    if (loginResponse.statusCode == 201) {
-      _pxSessionID = loginResponse.headers.value("pxsessionid")!;
-      return Right(loginResponse);
-    } else {
-      return Left(ProffixException(
-          body: loginResponse.data.toString(),
-          statusCode: loginResponse.statusCode));
+      var loginResponse = await _dioClient
+          .post(
+            loginUri,
+            data: loginBody,
+          )
+          .timeout(Duration(seconds: _options.timeout));
+      switch (loginResponse.statusCode) {
+        case 201:
+          _pxSessionID = loginResponse.headers.value("pxsessionid")!;
+          setPxSessionId(_pxSessionID);
+
+          return loginResponse;
+        default:
+          throw ProffixException(
+              body: jsonEncode(loginResponse.data),
+              statusCode: loginResponse.statusCode);
+      }
+    } catch (e) {
+      if (e is SocketException) {
+        throw ProffixException(body: e.toString());
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
@@ -141,14 +168,18 @@ class ProffixClient implements BaseProffixClient {
   Future<Response> logout({
     dioClient,
   }) async {
-    _dioClient.options.headers["PxSessionId"] = _pxSessionID;
-    _dioClient.options.headers["content-type"] = 'application/json';
+    _dioClient.options.headers['content-type'] = 'application/json';
+    _dioClient.options.headers['PxSessionId'] = _pxSessionID;
 
     try {
       final logoutUri = buildUriPx(restURL,
           [_options.apiPrefix, _options.version, _options.loginEndpoint]);
 
-      var logoutTask = await _dioClient.delete(logoutUri.toString());
+      var logoutTask = await _dioClient
+          .delete(
+            logoutUri,
+          )
+          .timeout(Duration(seconds: _options.timeout));
 
       // Clear PxSessionId
       _pxSessionID = "";
@@ -167,217 +198,255 @@ class ProffixClient implements BaseProffixClient {
 
   /// Utility method to make http get call
   @override
-  Future<Either<ProffixException, Response>> get({
+  Future<Response> get({
     String endpoint = '',
     Map<String, dynamic>? params,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
     String pxsessionid = await getPxSessionId();
 
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
+    _dioClient.options.headers["pxsessionid"] = pxsessionid;
+    _dioClient.options.contentType = Headers.jsonContentType;
+    _dioClient.options.responseType = ResponseType.json;
 
-    final getUri = _getUriUrl(
-        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-            .toString(),
-        params!);
+    try {
+      final getUri = _getUriUrl(
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+              .toString(),
+          null);
 
-    var resp = await _dioClient.get(getUri.toString());
-
-    if (resp.statusCode == 200) {
-      // Update PxSessionId
-      setPxSessionId(resp.headers.value("pxsessionid")!);
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+      var resp = await _dioClient.get(
+        getUri,
+        queryParameters: params,
+      );
+      switch (resp.statusCode) {
+        case 200:
+          // Update PxSessionId
+          setPxSessionId(resp.headers.value("pxsessionid"));
+          return resp;
+        default:
+          throw Result.error(
+              ProffixException(body: resp.data, statusCode: resp.statusCode));
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// Utility method to make http post call
   @override
-  Future<Either<ProffixException, Response>> post({
+  Future<Response> post({
     String endpoint = '',
     Map<String, dynamic>? data,
     Map<String, dynamic>? params,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
+    _dioClient.options.contentType = Headers.jsonContentType;
+    _dioClient.options.responseType = ResponseType.json;
 
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
+    _dioClient.options.headers['PxSessionId'] = pxsessionid;
 
-    final postUri = _getUriUrl(
-        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-            .toString(),
-        params);
+    try {
+      final postUri = _getUriUrl(
+          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+              .toString(),
+          params);
 
-    var resp = await _dioClient
-        .post(postUri.toString(), data: json.encode(data))
-        .timeout(Duration(seconds: _options.timeout));
-
-    if (resp.statusCode != null &&
-        (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      setPxSessionId(resp.headers.value("pxsessionid")!);
-
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+      var resp = await _dioClient.post(postUri, data: data);
+      if (resp.statusCode == null ||
+          (resp.statusCode! < 200 && resp.statusCode! > 300)) {
+        throw ProffixException(body: resp.data, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers.value("pxsessionid"));
+        return resp;
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// Utility method to make http patch call
   @override
-  Future<Either<ProffixException, Response>> patch({
+  Future<Response> patch({
     String endpoint = '',
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
 
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
+    _dioClient.options.headers['content-type'] = 'application/json';
+    _dioClient.options.headers['PxSessionId'] = pxsessionid;
 
-    var resp = await _dioClient
-        .patch(
-            buildUriPx(
-                    restURL, [_options.apiPrefix, _options.version, endpoint])
-                .toString(),
-            data: jsonEncode(data))
-        .timeout(Duration(seconds: _options.timeout));
+    try {
+      var resp = await _dioClient
+          .patch(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              data: jsonEncode(data))
+          .timeout(Duration(seconds: _options.timeout));
 
-    if (resp.statusCode != null &&
-        (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+      if (resp.statusCode == null ||
+          (resp.statusCode! < 200 || resp.statusCode! > 300)) {
+        throw ProffixException(body: resp.data, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers.value("pxsessionid"));
+        return resp;
+      }
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// Utility method to make http put call
   @override
-  Future<Either<ProffixException, Response>> put({
+  Future<Response> put({
     String endpoint = '',
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
 
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
+    _dioClient.options.headers['content-type'] = 'application/json';
+    _dioClient.options.headers['PxSessionId'] = pxsessionid;
 
-    var resp = await _dioClient
-        .put(
-            buildUriPx(
-                    restURL, [_options.apiPrefix, _options.version, endpoint])
-                .toString(),
-            data: json.encode(data))
-        .timeout(Duration(seconds: _options.timeout));
-    if (resp.statusCode != null &&
-        (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+    try {
+      var resp = await _dioClient
+          .put(
+              buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, endpoint]),
+              data: json.encode(data))
+          .timeout(Duration(seconds: _options.timeout));
+      if (resp.statusCode == null ||
+          (resp.statusCode! < 200 || resp.statusCode! > 300)) {
+        throw ProffixException(body: resp.data, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers.value("pxsessionid"));
+        return resp;
+      }
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// Utility method to make http delete call
   @override
-  Future<Either<ProffixException, Response>> delete(
-      {String endpoint = ''}) async {
+  Future<Response> delete({String endpoint = ''}) async {
     String pxsessionid = await getPxSessionId();
 
+    _dioClient.options.headers["content-type"] = "application/json";
     _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
 
-    var resp = await _dioClient.delete(
-        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-            .toString());
+    try {
+      var resp = await _dioClient
+          .delete(
+            buildUriPx(
+                restURL, [_options.apiPrefix, _options.version, endpoint]),
+          )
+          .timeout(Duration(seconds: _options.timeout));
 
-    if (resp.statusCode != null &&
-        (resp.statusCode! >= 200 || resp.statusCode! < 300)) {
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+      // Update PxSessionId
+      setPxSessionId(resp.headers.value("pxsessionid"));
+      return resp;
+    } catch (e) {
+      if (e is ProffixException) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// Utility method to directly get a list
   @override
-  Future<Either<ProffixException, Response>> getList({
+  Future<Response> getList({
     int listeNr = 0,
     Map<String, dynamic>? data,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
     String pxsessionid = await getPxSessionId();
 
+    _dioClient.options.headers["content-type"] = "application/json";
     _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
 
-    data ??= {};
-    var listDownload =
-        await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
+    try {
+      data ??= {};
+      var listDownload =
+          await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
+      String? downloadLocation = listDownload.headers.value("location");
+      setPxSessionId(listDownload.headers.value("pxsessionid"));
 
-    if (listDownload.isLeft()) {
-      return (listDownload);
-    } else {
-      listDownload.fold(
-          (l) => {},
-          (r) => {
-                setPxSessionId(r.headers.value("pxsessionid")),
-                _dioClient
-                    .get(Uri.parse(r.headers.value("location").toString())
-                        .toString())
-                    .then((value) => {Right(value)})
-              });
+      String downloadURI = Uri.parse(downloadLocation!).toString();
+
+      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+
+      return await _dioClient
+          .get(downloadURI)
+          .timeout(Duration(seconds: _options.timeout));
+    } on DioError catch (error) {
+      throw ProffixException(body: error.message.toString());
     }
-    return Left(ProffixException(body: "d", statusCode: 2));
   }
 
   /// Utility method to check valid credentials
   @override
-  Future<Either<ProffixException, Response>> check() async {
+  Future<Response> check() async {
     // return await call('get', path: path, headers: headers, params: params);
     String pxsessionid = await getPxSessionId();
 
+    _dioClient.options.headers["content-type"] = "application/json";
     _dioClient.options.headers["PxSessionId"] = pxsessionid;
-    _dioClient.options.headers["content-type"] = 'application/json';
 
-    Map<String, String> params = {"Limit": "1", "Fields": "AdressNr"};
-    final getUri = _getUriUrl(
-        buildUriPx(
-                restURL, [_options.apiPrefix, _options.version, "ADR/Adresse"])
-            .toString(),
-        params);
+    try {
+      Map<String, String> params = {"Limit": "1", "Fields": "AdressNr"};
+      final getUri = _getUriUrl(
+          buildUriPx(restURL,
+              [_options.apiPrefix, _options.version, "ADR/Adresse"]).toString(),
+          params);
 
-    var resp = await _dioClient
-        .get(
-          getUri.toString(),
-        )
-        .timeout(Duration(seconds: _options.timeout));
+      var resp = await _dioClient
+          .get(getUri)
+          .timeout(Duration(seconds: _options.timeout));
 
-    if (resp.statusCode == 200) {
-      // Update PxSessionId
-      setPxSessionId(resp.headers.value("pxsessionid")!);
+      switch (resp.statusCode) {
+        case 200:
+          // Update PxSessionId
+          setPxSessionId(resp.headers.value("pxsessionid"));
 
-      return Right(resp);
-    } else {
-      return Left(
-          ProffixException(body: resp.data, statusCode: resp.statusCode));
+          return resp;
+        default:
+          throw Result.error(
+              ProffixException(body: resp.data, statusCode: resp.statusCode));
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw ProffixException(body: e.toString());
     }
   }
 
   /// This method was taken from https://github.com/Ephenodrom/Dart-Basic-Utils/blob/master/lib/src/HttpUtils.dart#L279
-  static Uri _getUriUrl(String url, Map<String, dynamic>? queryParameters) {
+  static String _getUriUrl(String url, Map<String, dynamic>? queryParameters) {
     if (queryParameters != null && queryParameters.isEmpty) {
-      return Uri.parse(url);
+      return Uri.parse(url).toString();
     }
     final uri = Uri.parse(url);
-    return uri.replace(queryParameters: queryParameters);
+    return uri.replace(queryParameters: queryParameters).toString();
   }
 
   /// Manually sets the PxSessionId
@@ -388,17 +457,28 @@ class ProffixClient implements BaseProffixClient {
   /// Returns the used PxSessionId
   Future<String> getPxSessionId() async {
     if (_pxSessionID == "") {
-      var lgn = await login(
-          username: username,
-          password: password,
-          restURL: restURL,
-          database: database,
-          options: _options,
-          modules: modules);
+      try {
+        var lgn = await login(
+            username: username,
+            password: password,
+            restURL: restURL,
+            database: database,
+            options: _options,
+            modules: modules);
 
-      lgn.fold(
-          (l) => {ProffixException(body: l.body, statusCode: l.statusCode)},
-          (r) => {setPxSessionId(r.headers.value("pxsessionid"))});
+        if (lgn.statusCode != 201) {
+          throw Result.error(
+              ProffixException(body: lgn.data, statusCode: lgn.statusCode));
+        }
+
+        String pxsessionid = lgn.headers.value("pxsessionid").toString();
+        return pxsessionid;
+      } catch (e) {
+        if (e is Exception) {
+          rethrow;
+        }
+        throw ProffixException(body: e.toString());
+      }
     }
     return _pxSessionID;
   }
