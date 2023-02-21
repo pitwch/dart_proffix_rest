@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
@@ -157,10 +156,13 @@ class ProffixClient implements BaseProffixClient {
               statusCode: loginResponse.statusCode);
       }
     } catch (e) {
-      if (e is SocketException) {
-        throw ProffixException(body: e.toString());
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -189,10 +191,13 @@ class ProffixClient implements BaseProffixClient {
 
       return logoutTask;
     } catch (e) {
-      if (e is ProffixException) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -229,10 +234,13 @@ class ProffixClient implements BaseProffixClient {
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -266,10 +274,13 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -302,10 +313,13 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is ProffixException) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -337,10 +351,13 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is ProffixException) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -364,10 +381,13 @@ class ProffixClient implements BaseProffixClient {
       setPxSessionId(resp.headers.value("pxsessionid"));
       return resp;
     } catch (e) {
-      if (e is ProffixException) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -397,8 +417,14 @@ class ProffixClient implements BaseProffixClient {
       return await _dioClient
           .get(downloadURI)
           .timeout(Duration(seconds: _options.timeout));
-    } on DioError catch (error) {
-      throw ProffixException(body: error.message.toString());
+    } catch (e) {
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
+      }
     }
   }
 
@@ -433,10 +459,13 @@ class ProffixClient implements BaseProffixClient {
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
+        throw ProffixException(
+            body: e.message, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
       }
-      throw ProffixException(body: e.toString());
     }
   }
 
@@ -474,10 +503,13 @@ class ProffixClient implements BaseProffixClient {
         String pxsessionid = lgn.headers.value("pxsessionid").toString();
         return pxsessionid;
       } catch (e) {
-        if (e is Exception) {
-          rethrow;
+        if (e is DioError) {
+          //handle DioError here by error type or by error code
+          throw ProffixException(
+              body: e.message, statusCode: e.response?.statusCode ?? 0);
+        } else {
+          throw ProffixException(body: e.toString(), statusCode: 0);
         }
-        throw ProffixException(body: e.toString());
       }
     }
     return _pxSessionID;

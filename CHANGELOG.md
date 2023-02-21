@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.1.8
+
+- Upgrade to Dio
+
 ## v0.1.7
 
 - Fix Status Response
