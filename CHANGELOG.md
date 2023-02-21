@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.1.9
+
+- Fix Exception
+
 ## v0.1.8
 
 - Upgrade to Dio
