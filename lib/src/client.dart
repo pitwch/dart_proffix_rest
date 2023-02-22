@@ -408,7 +408,7 @@ class ProffixClient implements BaseProffixClient {
       _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
       return await _dioClient.get(downloadURI,
-          options: Options(responseType: ResponseType.stream));
+          options: Options(responseType: ResponseType.bytes));
     } catch (e) {
       if (e is DioError) {
         throw ProffixException(
