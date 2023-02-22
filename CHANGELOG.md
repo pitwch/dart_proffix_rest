@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.2.0
+
+- Clean deps
+- Optimize ProffixException
+
 ## v0.1.9
 
 - Fix Exception

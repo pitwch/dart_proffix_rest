@@ -27,15 +27,23 @@ class ProffixHelpers {
   }
 
   /// Convert the Proffix time string [pxtime] to DateTime object.
-  DateTime convertPxTimeToTime(String pxtime) {
-    DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
-    return pxformat.parse(pxtime);
+  DateTime convertPxTimeToTime(String? pxtime) {
+    if (pxtime == null) {
+      return DateTime(0, 0, 0);
+    } else {
+      DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
+      return pxformat.parse(pxtime);
+    }
   }
 
   /// Convert the DateTime object [date] Proffix times string.
-  String convertTimeToPxTime(DateTime date) {
-    final DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
-    return pxformat.format(date);
+  String convertTimeToPxTime(DateTime? date) {
+    if (date == null) {
+      return "0000-00-00 00:00:00";
+    } else {
+      final DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
+      return pxformat.format(date);
+    }
   }
 
   /// Convert the plain text password [password] to SHA-256 hashed password.

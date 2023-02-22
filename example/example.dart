@@ -11,8 +11,8 @@ void main() async {
 
   // Login  vorbereiten
   var pxClient = ProffixClient(
-      database: 'DEMODBPX5',
-      restURL: "https://remote.proffix.ch:10001",
+      database: 'DEMODB',
+      restURL: "https://remote.proffix.net:11011",
       username: "Gast",
       password: sha256Digest.toString(),
       modules: ["VOL"],
@@ -20,7 +20,7 @@ void main() async {
 
   // Beispiel - Map für eine Adresse
   Map<String, dynamic> tmpAddress = {
-    "Name": "APITest",
+    //  "Name": "APITest",
     "Vorname": "Rest",
     "Ort": "Zürich",
     "PLZ": "8000",
@@ -45,7 +45,7 @@ void main() async {
   print("${"Es wurden $countResults"} Adressen für 'Muster' gefunden");
 
   // Die gefundenden Adressen aus JSON dekodieren
-  var allResults = jsonDecode(getAddress.data);
+  var allResults = (getAddress.data);
 
   // Das erste Ergebnis / die erste Adresse extrahieren
   var firstResult = allResults[0];

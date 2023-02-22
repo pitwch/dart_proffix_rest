@@ -15,7 +15,7 @@ class ProffixErrorField {
 }
 
 class ProffixException implements Exception {
-  String? body;
+  dynamic body;
   int? statusCode;
   ProffixException({this.body, this.statusCode});
 

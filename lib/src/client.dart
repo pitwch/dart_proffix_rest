@@ -4,7 +4,6 @@ import 'package:async/async.dart';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
 import 'package:dart_proffix_rest/src/client_base.dart';
 import 'package:dio/dio.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class ProffixClient implements BaseProffixClient {
   /// Creates a new instance of [ProffixClient]
@@ -46,16 +45,6 @@ class ProffixClient implements BaseProffixClient {
       _options = options;
     }
 
-    if (enableLogger == true) {
-      _dioClient.interceptors.add(PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
-          responseBody: true,
-          responseHeader: true,
-          error: true,
-          compact: false,
-          maxWidth: 90));
-    }
     _dioClient.options.headers["user-agent"] = _options.userAgent;
 
     if (pxSessionID == null) {
@@ -159,7 +148,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -194,7 +183,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -237,7 +226,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -277,8 +266,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data.toString(),
-            statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -317,7 +305,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -355,7 +343,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -385,7 +373,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -422,7 +410,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -463,7 +451,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -507,7 +495,7 @@ class ProffixClient implements BaseProffixClient {
         if (e is DioError) {
           //handle DioError here by error type or by error code
           throw ProffixException(
-              body: e.response?.data, statusCode: e.response?.statusCode ?? 0);
+              body: e.response, statusCode: e.response?.statusCode ?? 0);
         } else {
           throw ProffixException(body: e.toString(), statusCode: 0);
         }
