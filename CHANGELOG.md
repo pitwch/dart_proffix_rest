@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.2.1
+
+- Fix GetList
+
 ## v0.2.0
 
 - Clean deps

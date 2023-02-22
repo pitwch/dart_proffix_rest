@@ -392,10 +392,14 @@ class ProffixClient implements BaseProffixClient {
     _dioClient.options.headers["content-type"] = "application/json";
     _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
+    // Set ResponseType to bytes
+    _dioClient.options.responseType = ResponseType.bytes;
+
     try {
       data ??= {};
       var listDownload =
           await post(endpoint: "PRO/Liste/$listeNr/generieren", data: data);
+
       String? downloadLocation = listDownload.headers.value("location");
       setPxSessionId(listDownload.headers.value("pxsessionid"));
 

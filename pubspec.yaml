@@ -1,6 +1,6 @@
 name: dart_proffix_rest
 description: A Dart wrapper for Proffix Rest API with automatic login and logout and many useful helper functions
-version: 0.2.0
+version: 0.2.1
 repository: https://github.com/pitwch/dart_proffix_rest
 homepage: https://github.com/pitwch/dart_proffix_rest
 environment:
