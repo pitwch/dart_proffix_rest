@@ -407,12 +407,10 @@ class ProffixClient implements BaseProffixClient {
 
       _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
-      return await _dioClient
-          .get(downloadURI)
-          .timeout(Duration(seconds: _options.timeout));
+      return await _dioClient.get(downloadURI,
+          options: Options(responseType: ResponseType.stream));
     } catch (e) {
       if (e is DioError) {
-        //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
@@ -443,9 +441,9 @@ class ProffixClient implements BaseProffixClient {
 
       switch (resp.statusCode) {
         case 200:
+
           // Update PxSessionId
           setPxSessionId(resp.headers.value("pxsessionid"));
-
           return resp;
         default:
           throw Result.error(
