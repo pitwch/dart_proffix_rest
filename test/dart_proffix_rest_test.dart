@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
 import 'package:test/test.dart';
 
@@ -155,6 +158,18 @@ void main() {
     // Check if ProffixException is thrown
     expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress),
         throwsA(isA<ProffixException>()));
+  });
+
+  test('Upload File (Post)', () async {
+    // Read file
+    final File file = File("_assets/dart-proffix.png");
+
+    var bytes = file.readAsBytesSync();
+    var dataUpload = Uint8List.fromList(bytes);
+    // Put Request Test
+    var uploadReq =
+        await validClient.uploadFile(data: dataUpload, fileName: "testBild");
+    expect(uploadReq != "", true);
   });
 
   test('Logout', () async {

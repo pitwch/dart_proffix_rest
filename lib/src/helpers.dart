@@ -26,6 +26,17 @@ class ProffixHelpers {
     }
   }
 
+  /// Convert the header of response [header] to primary key created / updated object.
+  String convertLocationIdString(Headers header) {
+    String? location = header.value("location");
+    if (location != "" && location != null) {
+      String lastPath = Uri.parse(location).pathSegments.last;
+      return lastPath;
+    } else {
+      return "";
+    }
+  }
+
   /// Convert the Proffix time string [pxtime] to DateTime object.
   DateTime convertPxTimeToTime(String? pxtime) {
     if (pxtime == null) {

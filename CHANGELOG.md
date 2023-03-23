@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.2.4
+
+- Add uploadFile Function
+
 ## v0.2.3
 
 - Fix GetList as Uint8

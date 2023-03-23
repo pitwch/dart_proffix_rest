@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:async/async.dart';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
@@ -183,7 +184,7 @@ class ProffixClient implements BaseProffixClient {
       if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
+            body: e.toString(), statusCode: e.response?.statusCode ?? 0);
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }
@@ -411,6 +412,47 @@ class ProffixClient implements BaseProffixClient {
           options: Options(responseType: ResponseType.bytes));
     } catch (e) {
       if (e is DioError) {
+        throw ProffixException(
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
+      }
+    }
+  }
+
+  /// Utility method to directly upload a file
+  @override
+  Future<String> uploadFile({String? fileName, Uint8List? data}) async {
+    // return await call('post', path: path, headers: headers, data: data);
+    String pxsessionid = await getPxSessionId();
+    _dioClient.options.contentType = Headers.jsonContentType;
+    _dioClient.options.responseType = ResponseType.json;
+
+    _dioClient.options.headers['PxSessionId'] = pxsessionid;
+    _dioClient.options.headers["content-type"] = "application/octet-stream";
+
+    Map<String, dynamic> params = {"filename": fileName};
+    try {
+      final postUri = _getUriUrl(
+          buildUriPx(
+                  restURL, [_options.apiPrefix, _options.version, "PRO/Datei"])
+              .toString(),
+          fileName != null ? params : null);
+
+      var resp = await _dioClient.post(postUri,
+          data: Stream.fromIterable(data!.map((e) => [e])));
+      if (resp.statusCode == null ||
+          (resp.statusCode! < 200 && resp.statusCode! > 300)) {
+        throw ProffixException(body: resp.data, statusCode: resp.statusCode);
+      } else {
+        // Update PxSessionId
+        setPxSessionId(resp.headers.value("pxsessionid"));
+        String dateiNr = ProffixHelpers().convertLocationIdString(resp.headers);
+        return dateiNr;
+      }
+    } catch (e) {
+      if (e is DioError) {
+        //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {

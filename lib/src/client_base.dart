@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import '../dart_proffix_rest.dart';
@@ -49,6 +51,12 @@ abstract class BaseProffixClient {
   Future<Response> getList({
     required int listeNr,
     Map<String, dynamic>? data,
+  });
+
+  /// An alias of ProffixClient.uploadFile('getList')
+  Future<String> uploadFile({
+    required String? fileName,
+    required Uint8List data,
   });
 
   /// An alias of ProffixClient.getList('getList')

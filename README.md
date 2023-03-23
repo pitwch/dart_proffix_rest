@@ -173,6 +173,22 @@ Prüft die Login - Credentials und gibt bei Fehlern eine Exception aus.
 
 ```
 
+##### Upload File
+
+Lädt eine Datei auf PRO/Datei hoch und gibt die DateiNr als String zurück
+
+```dart
+
+  final File file = File("_assets/dart-proffix.png");
+
+  var bytes = file.readAsBytesSync();
+  var dataUpload = Uint8List.fromList(bytes);
+
+  var dateiNr = await pxClient.uploadFile("testDate.png",dataUpload);
+  
+
+```
+
 ##### Logout
 
 Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei. Zusätzlich wird der Dart Client geschlossen.
