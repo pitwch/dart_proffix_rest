@@ -59,6 +59,11 @@ abstract class BaseProffixClient {
     required Uint8List data,
   });
 
+  /// An alias of ProffixClient.uploadFile('getList')
+  Future<Response> downloadFile({
+    required String dateiNr,
+  });
+
   /// An alias of ProffixClient.getList('getList')
   Future<Response> check();
 }

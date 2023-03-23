@@ -38,6 +38,7 @@ void main() {
   int tmpAdressNr = 0;
   String tmpPxSessionId = '';
   DateTime tmpDateTime = DateTime.now();
+  String? tmpDateiNr;
   test('Create Address', () async {
     // Create Address
     var postReq =
@@ -169,7 +170,19 @@ void main() {
     // Put Request Test
     var uploadReq =
         await validClient.uploadFile(data: dataUpload, fileName: "testBild");
+
+    // Set tmpDateiNr for other tests
+    tmpDateiNr = uploadReq;
+
     expect(uploadReq != "", true);
+  });
+
+  test('Download File (Get)', () async {
+    // Read file
+
+    var downloadReq =
+        await validClient.downloadFile(dateiNr: tmpDateiNr.toString());
+    expect(downloadReq.statusCode, 200);
   });
 
   test('Logout', () async {

@@ -173,19 +173,22 @@ Prüft die Login - Credentials und gibt bei Fehlern eine Exception aus.
 
 ```
 
-##### Upload File
+##### Upload / Download File
 
 Lädt eine Datei auf PRO/Datei hoch und gibt die DateiNr als String zurück
 
 ```dart
 
+  // Upload File
   final File file = File("_assets/dart-proffix.png");
 
   var bytes = file.readAsBytesSync();
   var dataUpload = Uint8List.fromList(bytes);
 
   var dateiNr = await pxClient.uploadFile("testDate.png",dataUpload);
-  
+
+  // Download File (again)
+  var fileAgain = await pxClient.downloadFile(dateiNr: dateiNr.toString());
 
 ```
 

@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.2.5
+
+- Add DownloadFile Function
+
 ## v0.2.4
 
 - Add uploadFile Function

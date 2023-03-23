@@ -420,9 +420,36 @@ class ProffixClient implements BaseProffixClient {
     }
   }
 
+  /// Utility method to directly download a file from PRO/Datei
+  @override
+  Future<Response> downloadFile({required String dateiNr}) async {
+    String pxsessionid = await getPxSessionId();
+    final downloadUri = _getUriUrl(
+        buildUriPx(restURL, [
+          _options.apiPrefix,
+          _options.version,
+          "PRO/Datei/$dateiNr"
+        ]).toString(),
+        null);
+
+    try {
+      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+
+      return await _dioClient.get(downloadUri,
+          options: Options(responseType: ResponseType.bytes));
+    } catch (e) {
+      if (e is DioError) {
+        throw ProffixException(
+            body: e.response, statusCode: e.response?.statusCode ?? 0);
+      } else {
+        throw ProffixException(body: e.toString(), statusCode: 0);
+      }
+    }
+  }
+
   /// Utility method to directly upload a file
   @override
-  Future<String> uploadFile({String? fileName, Uint8List? data}) async {
+  Future<String> uploadFile({String? fileName, required Uint8List data}) async {
     // return await call('post', path: path, headers: headers, data: data);
     String pxsessionid = await getPxSessionId();
     _dioClient.options.contentType = Headers.jsonContentType;
@@ -440,7 +467,7 @@ class ProffixClient implements BaseProffixClient {
           fileName != null ? params : null);
 
       var resp = await _dioClient.post(postUri,
-          data: Stream.fromIterable(data!.map((e) => [e])));
+          data: Stream.fromIterable(data.map((e) => [e])));
       if (resp.statusCode == null ||
           (resp.statusCode! < 200 && resp.statusCode! > 300)) {
         throw ProffixException(body: resp.data, statusCode: resp.statusCode);
