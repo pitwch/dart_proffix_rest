@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -146,7 +147,11 @@ class ProffixClient implements BaseProffixClient {
               statusCode: loginResponse.statusCode);
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is TimeoutException) {
+        throw ProffixException(
+            body: "Proffix Rest-API kann nicht erreicht werden (Timeout)",
+            statusCode: 408);
+      } else if (e is DioError) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);

@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.2.6
+
+- Upgrade all libs
+- Optimize Error message on Timeout
+
 ## v0.2.5
 
 - Add DownloadFile Function
