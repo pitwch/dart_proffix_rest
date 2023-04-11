@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
@@ -146,17 +147,30 @@ class ProffixClient implements BaseProffixClient {
               body: jsonEncode(loginResponse.data),
               statusCode: loginResponse.statusCode);
       }
-    } catch (e) {
-      if (e is TimeoutException) {
-        throw ProffixException(
-            body: "Proffix Rest-API kann nicht erreicht werden (Timeout)",
-            statusCode: 408);
-      } else if (e is DioError) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioError catch (e) {
+      {
+        /// Handle TimeoutException
+        if (e is TimeoutException) {
+          throw ProffixException(
+              body: "Proffix Rest-API kann nicht erreicht werden (Timeout)",
+              statusCode: 408);
+
+          /// Handle other connection errors
+        } else if (DioErrorType.connectionError == e.type ||
+            DioErrorType.unknown == e.type) {
+          throw ProffixException(
+              body:
+                  "Proffix Rest-API kann nicht erreicht werden (Verbindungsproblem)",
+              statusCode: 0);
+
+          /// Handle errors with response
+        } else if (e.response != null) {
+          throw ProffixException(
+              body: e.response, statusCode: e.response?.statusCode ?? 0);
+        } else {
+          /// Handle everything else
+          throw ProffixException(body: e.toString(), statusCode: 0);
+        }
       }
     }
   }
