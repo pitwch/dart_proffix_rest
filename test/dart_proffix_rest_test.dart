@@ -159,6 +159,12 @@ void main() {
     // Check if ProffixException is thrown
     expect(() => validClient.post(endpoint: "ADR/Adresse", data: failedAddress),
         throwsA(isA<ProffixException>()));
+
+    // Check if ProffixException toPxError works
+    expect(
+        () => validClient.post(endpoint: "ADR/Adresse", data: failedAddress),
+        throwsA(predicate(
+            (e) => e is ProffixException && e.toPxError().fields!.isNotEmpty)));
   });
 
   test('Upload File (Post)', () async {
@@ -194,7 +200,15 @@ void main() {
     var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
     var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
     expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
+
+    // Check null
+    var nullTime = ProffixHelpers().convertPxTimeToTime(null);
+    expect(nullTime.hour, 0);
+
+    var nullPxTime = ProffixHelpers().convertTimeToPxTime(null);
+    expect(nullPxTime, "0000-00-00 00:00:00");
   });
+
   test('Failed Login (Wrong Password)', () async {
     var invalidClient = ProffixClient(
         database: envVars['PX_DB'].toString(),
@@ -207,6 +221,9 @@ void main() {
     // Check if ProffixException is thrown
     expect(() => invalidClient.get(endpoint: "ADR/Adresse"),
         throwsA(isA<ProffixException>()));
+
+    // Check if check works
+    expect(() => invalidClient.check(), throwsA(isA<ProffixException>()));
   });
 
   test('Failed Login (Wrong URL)', () async {
@@ -222,4 +239,5 @@ void main() {
     expect(() => invalidClient2.get(endpoint: "ADR/Adresse"),
         throwsA(isA<ProffixException>()));
   });
+  test('Test BaseProffixClient', () async {});
 }

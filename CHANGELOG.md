@@ -1,5 +1,15 @@
 # Release Note
 
+## v0.2.8
+
+- Optimize Tests and Codecov
+- Upgrade all libs
+
+## v0.2.7
+
+- Upgrade all libs
+- Fix SocketException
+
 ## v0.2.6
 
 - Upgrade all libs
