@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.2.9
+
+- Update CI
+- Upgrade all libs
+
 ## v0.2.8
 
 - Optimize Tests and Codecov
