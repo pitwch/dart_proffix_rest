@@ -146,7 +146,7 @@ class ProffixClient implements BaseProffixClient {
               body: jsonEncode(loginResponse.data),
               statusCode: loginResponse.statusCode);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       {
         /// Handle TimeoutException
         if (e is TimeoutException) {
@@ -155,8 +155,8 @@ class ProffixClient implements BaseProffixClient {
               statusCode: 408);
 
           /// Handle other connection errors
-        } else if (DioErrorType.connectionError == e.type ||
-            DioErrorType.unknown == e.type) {
+        } else if (DioExceptionType.connectionError == e.type ||
+            DioExceptionType.unknown == e.type) {
           throw ProffixException(
               body:
                   "Proffix Rest-API kann nicht erreicht werden (Verbindungsproblem)",
@@ -199,7 +199,7 @@ class ProffixClient implements BaseProffixClient {
 
       return logoutTask;
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.toString(), statusCode: e.response?.statusCode ?? 0);
@@ -242,7 +242,7 @@ class ProffixClient implements BaseProffixClient {
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -282,7 +282,7 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -321,7 +321,7 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -359,7 +359,7 @@ class ProffixClient implements BaseProffixClient {
         return resp;
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -389,7 +389,7 @@ class ProffixClient implements BaseProffixClient {
       setPxSessionId(resp.headers.value("pxsessionid"));
       return resp;
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -429,7 +429,7 @@ class ProffixClient implements BaseProffixClient {
       return await _dioClient.get(downloadURI,
           options: Options(responseType: ResponseType.bytes));
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
@@ -456,7 +456,7 @@ class ProffixClient implements BaseProffixClient {
       return await _dioClient.get(downloadUri,
           options: Options(responseType: ResponseType.bytes));
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
       } else {
@@ -496,7 +496,7 @@ class ProffixClient implements BaseProffixClient {
         return dateiNr;
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -537,7 +537,7 @@ class ProffixClient implements BaseProffixClient {
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
     } catch (e) {
-      if (e is DioError) {
+      if (e is DioException) {
         //handle DioError here by error type or by error code
         throw ProffixException(
             body: e.response, statusCode: e.response?.statusCode ?? 0);
@@ -581,7 +581,7 @@ class ProffixClient implements BaseProffixClient {
         String pxsessionid = lgn.headers.value("pxsessionid").toString();
         return pxsessionid;
       } catch (e) {
-        if (e is DioError) {
+        if (e is DioException) {
           //handle DioError here by error type or by error code
           throw ProffixException(
               body: e.response, statusCode: e.response?.statusCode ?? 0);
