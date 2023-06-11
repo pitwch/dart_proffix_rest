@@ -8,12 +8,12 @@ environment:
 
 dependencies:
   async: ^2.11.0
-  crypto: ^3.0.2
+  crypto: ^3.0.3
   dartz: ^0.10.1
-  dio: ^5.1.1
-  intl: ^0.18.0
+  dio: ^5.2.1
+  intl: ^0.18.1
 
 dev_dependencies:
   dotenv: ^4.1.0
-  lints: ^2.0.1
-  test: ^1.24.1
+  lints: ^2.1.1
+  test: ^1.24.3
