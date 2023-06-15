@@ -47,7 +47,7 @@ class ProffixClient implements BaseProffixClient {
       _options = options;
     }
 
-    _dioClient.options.headers["user-agent"] = _options.userAgent;
+    // _dioClient.options.headers["user-agent"] = _options.userAgent;
 
     if (pxSessionID == null) {
       _pxSessionID = "";
