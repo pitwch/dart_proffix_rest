@@ -309,7 +309,8 @@ Extrahiert die Anzahl Ergebnisse aus dem Header PxMetaData der PROFFIX REST-API
 Im Ordner [/example](https://github.com/pitwch/dart_proffix_rest/tree/master/example) finden sich weitere,
 auskommentierte Beispiele.
 
+### Proof of Work
 
-Dieser Wrapper wird produktiv mit allen pfx Apps - den [Apps für Proffix](https://pfx.ch) eingesetzt.
+Dieser Wrapper wird **produktiv** mit allen pfx Apps - den [Apps für Proffix](https://pfx.ch) eingesetzt.
 
 <!-- markdownlint-enable MD041 -->
