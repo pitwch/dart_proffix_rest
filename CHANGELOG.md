@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.3.2
+
+- Update deps
+
 ## v0.3.1
 
 - Update deps
