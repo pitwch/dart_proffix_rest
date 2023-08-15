@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:async/async.dart';
@@ -185,11 +186,8 @@ class ProffixClient implements BaseProffixClient {
       final logoutUri = buildUriPx(restURL,
           [_options.apiPrefix, _options.version, _options.loginEndpoint]);
 
-      var logoutTask = await _dioClient
-          .delete(
-            logoutUri,
-          )
-          .timeout(Duration(seconds: _options.timeout));
+      var logoutTask = await _dioClient.delete(logoutUri,
+          data: {}).timeout(Duration(seconds: _options.timeout));
 
       // Clear PxSessionId
       _pxSessionID = "";
@@ -441,26 +439,31 @@ class ProffixClient implements BaseProffixClient {
   /// Utility method to directly download a file from PRO/Datei
   @override
   Future<Response> downloadFile({required String dateiNr}) async {
-    String pxsessionid = await getPxSessionId();
-    final downloadUri = _getUriUrl(
-        buildUriPx(restURL, [
-          _options.apiPrefix,
-          _options.version,
-          "PRO/Datei/$dateiNr"
-        ]).toString(),
-        null);
-
     try {
+      String pxsessionid = await getPxSessionId();
+      final downloadUri = _getUriUrl(
+          buildUriPx(restURL,
+              [_options.apiPrefix, _options.version, "PRO/Datei/$dateiNr"]),
+          null);
+
       _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
       return await _dioClient.get(downloadUri,
-          options: Options(responseType: ResponseType.bytes));
+          data: {},
+          options: Options(
+            responseType: ResponseType.bytes,
+          ));
     } catch (e) {
-      if (e is DioException) {
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
+      if (e is ProffixException) {
+        rethrow;
+      } else if (e is HttpException) {
+        throw ProffixException(body: e.message, statusCode: 0);
       } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+        if (e is List<int>) {
+          throw ProffixException(body: utf8.decode(e), statusCode: 0);
+        } else {
+          throw ProffixException(body: e, statusCode: 0);
+        }
       }
     }
   }
@@ -475,6 +478,8 @@ class ProffixClient implements BaseProffixClient {
 
     _dioClient.options.headers['PxSessionId'] = pxsessionid;
     _dioClient.options.headers["content-type"] = "application/octet-stream";
+    _dioClient.options.contentType = "application/octet-stream";
+    _dioClient.options.headers['Content-Length'] = data.length;
 
     Map<String, dynamic> params = {"filename": fileName};
     try {
@@ -485,6 +490,10 @@ class ProffixClient implements BaseProffixClient {
           fileName != null ? params : null);
 
       var resp = await _dioClient.post(postUri,
+          // onSendProgress: (count, total) => {print(count)},
+          options: Options(
+              receiveTimeout: Duration(minutes: 2),
+              sendTimeout: Duration(minutes: 2)),
           data: Stream.fromIterable(data.map((e) => [e])));
       if (resp.statusCode == null ||
           (resp.statusCode! < 200 && resp.statusCode! > 300)) {
@@ -496,10 +505,9 @@ class ProffixClient implements BaseProffixClient {
         return dateiNr;
       }
     } catch (e) {
-      if (e is DioException) {
+      if (e is ProffixException) {
         //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
+        rethrow;
       } else {
         throw ProffixException(body: e.toString(), statusCode: 0);
       }

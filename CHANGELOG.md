@@ -1,5 +1,11 @@
 # Release Note
 
+## v0.3.3
+
+- Fix big sized Upload Datei / Download Datei
+- Optimize tests
+- Update deps
+
 ## v0.3.2
 
 - Update deps
