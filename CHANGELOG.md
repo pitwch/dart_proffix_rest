@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.3.4
+
+- Add Params to GetFile
+- Update deps
+
 ## v0.3.3
 
 - Fix big sized Upload Datei / Download Datei

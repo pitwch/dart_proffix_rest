@@ -438,13 +438,15 @@ class ProffixClient implements BaseProffixClient {
 
   /// Utility method to directly download a file from PRO/Datei
   @override
-  Future<Response> downloadFile({required String dateiNr}) async {
+  Future<Response> downloadFile(
+      {required String dateiNr, Map<String, dynamic>? params}) async {
     try {
       String pxsessionid = await getPxSessionId();
+
       final downloadUri = _getUriUrl(
           buildUriPx(restURL,
               [_options.apiPrefix, _options.version, "PRO/Datei/$dateiNr"]),
-          null);
+          params);
 
       _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
