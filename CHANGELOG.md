@@ -1,5 +1,10 @@
 # Release Note
 
+## v0.3.5
+
+- Dart 3
+- Update deps
+
 ## v0.3.4
 
 - Add Params to GetFile
