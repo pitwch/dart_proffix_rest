@@ -37,10 +37,10 @@ abstract class BaseProffixClient {
   });
 
   /// An alias of ProffixClient.call('put')
-  Future<Response> put({
-    required String endpoint,
-    Map<String, dynamic>? data,
-  });
+  Future<Response> put(
+      {required String endpoint,
+      Map<String, dynamic>? data,
+      Map<String, dynamic>? params = const {}});
 
   /// An alias of ProffixClient.call('delete')
   Future<Response> delete({
