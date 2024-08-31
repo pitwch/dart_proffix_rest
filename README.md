@@ -22,6 +22,9 @@ and the Flutter guide for
 
 ![alt text](https://raw.githubusercontent.com/pitwch/dart_proffix_rest/main/_assets/dart-proffix.png "Dart Wrapper PROFFIX REST API")
 
+Dieser Wrapper wird von der [Pedrett IT+Web AG](https://www.pitw.ch) - dem unabhängigen und innovativen Proffix Px5 Partner - **unterhalten und entwickelt**.
+
+
 ## Übersicht
 
 - [Installation](#installation)
