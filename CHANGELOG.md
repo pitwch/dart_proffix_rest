@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.3.7
+
+- Update deps
+
 ## v0.3.5
 
 - Dart 3
