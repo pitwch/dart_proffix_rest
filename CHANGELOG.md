@@ -1,5 +1,11 @@
 # Release Note
 
+## v0.4.1
+
+- Fix logout
+- Add forceLogout parameter to logout()
+- Add clearSessionCache parameter to logout()
+
 ## v0.4.0
 
 - Update deps

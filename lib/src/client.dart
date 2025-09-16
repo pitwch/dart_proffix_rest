@@ -200,7 +200,18 @@ class ProffixClient implements BaseProffixClient {
   /// Do logout on Proffix REST-API and deletes PxSessionId
   Future<Response> logout({
     Dio? dioClient,
+    bool clearSessionCache = true,
+    bool forceLogout = false,
   }) async {
+    // If using VOL licence/module, no explicit logout is required unless forceLogout is true
+    if (!forceLogout &&
+        (_options.volumeLicence ||
+            (modules != null && modules!.contains("VOL")))) {
+      return Response(
+        statusCode: 204,
+        requestOptions: RequestOptions(path: ''),
+      );
+    }
     _dioClient.options.headers['content-type'] = 'application/json';
     _dioClient.options.headers['PxSessionId'] = _pxSessionID;
 
@@ -213,8 +224,8 @@ class ProffixClient implements BaseProffixClient {
 
       // Clear PxSessionId
       _pxSessionID = "";
-      // Also clear cached session if enabled
-      if (_options.enableSessionCaching) {
+      // Also clear cached session if enabled and requested
+      if (clearSessionCache && _options.enableSessionCaching) {
         final clearer = _options.clearSessionId;
         if (clearer != null) {
           unawaited(clearer());

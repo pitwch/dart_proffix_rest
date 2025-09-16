@@ -24,7 +24,6 @@ and the Flutter guide for
 
 Dieser Wrapper wird von der [Pedrett IT+Web AG](https://www.pitw.ch) - dem unabhängigen und innovativen Proffix Px5 Partner - **unterhalten und entwickelt**.
 
-
 ## Übersicht
 
 - [Installation](#installation)
@@ -73,6 +72,8 @@ var pxClient = ProffixClient(
 
 ```
 
+> Hinweis zu VOL: Wenn das Modul "VOL" genutzt wird (oder `volumeLicence == true` gesetzt ist), führt `logout()` standardmäßig keinen Aufruf an die REST-API aus. Bei Bedarf können Sie einen Logout mit `forceLogout: true` erzwingen und mit `clearSessionCache` steuern, ob ein aktivierter Session-Cache geleert werden soll. Siehe Abschnitt „Logout“ weiter unten.
+
 ### Optionen
 
 Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
@@ -114,7 +115,7 @@ final client = ProffixClient(
 );
 ```
 
-2. Eigene Speicherlogik verwenden
+1. Eigene Speicherlogik verwenden
 
 Sie können eigene Callbacks zum Laden/Speichern/Löschen der Session-ID übergeben (z. B. Secure Storage, SharedPreferences, etc.):
 
@@ -251,15 +252,32 @@ Lädt eine Datei auf PRO/Datei hoch und gibt die DateiNr als String zurück
 
 Loggt den Client von der PROFFIX REST-API aus und gibt die Session / Lizenz damit wieder frei. Zusätzlich wird der Dart Client geschlossen.
 
-**Hinweis:** Es wird automatisch die zuletzt verwendete PxSessionId für den Logout verwendet
+Ab dieser Version berücksichtigt der Client die PROFFIX Volumenlizenzierung (VOL):
+
+- Wenn die Volumenlizenz aktiv ist (Option `volumeLicence == true` oder das Modul `"VOL"` gesetzt ist), wird standardmässig **kein Logout** ausgeführt, da dies nicht erforderlich ist.
+- Mit dem Parameter `forceLogout: true` können Sie dennoch einen Logout erzwingen.
+- Mit `clearSessionCache: false` können Sie steuern, ob ein aktivierter Session-Cache beim Logout geleert werden soll (Standard: `true`).
+
+Parameter der Methode `logout()`:
+
+- `forceLogout` (bool, default `false`): Erzwingt den Logout auch bei VOL.
+- `clearSessionCache` (bool, default `true`): Löscht bei aktivem Session-Caching die persistierte PxSessionId.
 
 ```dart
+// Standard-Logout (bei VOL wird nichts gemacht)
+var logoutResp = await pxClient.logout();
 
- var lgout = await pxClient.logout();
+// Logout erzwingen, auch wenn VOL aktiv ist
+var forcedLogoutResp = await pxClient.logout(forceLogout: true);
 
+// Logout erzwingen, aber den Session-Cache behalten (z. B. zur Wiederverwendung)
+var forcedLogoutKeepCache = await pxClient.logout(
+  forceLogout: true,
+  clearSessionCache: false,
+);
 ```
 
-Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch damit keine Lizenz geblockt wird.
+Der Wrapper führt den **Logout auch automatisch bei Fehlern** durch, damit keine Lizenz geblockt wird. Bei aktivem Session-Caching wird der Cache im Fehlerfall invalidiert und beim nächsten Request automatisch neu eingeloggt.
 
 ##### getPxSessionId()
 
