@@ -6,44 +6,61 @@ import 'package:intl/intl.dart';
 class ProffixHelpers {
   /// Convert the header of response [header] to amount of results of response.
   int getFilteredCount(Headers header) {
-    String? pxmetadata = header.value("pxmetadata");
-
-    if (pxmetadata != "") {
-      return jsonDecode(pxmetadata!)["FilteredCount"];
-    } else {
+    final String? pxmetadata = header.value("pxmetadata");
+    if (pxmetadata == null || pxmetadata.isEmpty) {
+      return 0;
+    }
+    try {
+      final dynamic decoded = jsonDecode(pxmetadata);
+      final dynamic count = decoded["FilteredCount"];
+      if (count is num) {
+        return count.toInt();
+      }
+      return 0;
+    } catch (_) {
       return 0;
     }
   }
 
   /// Convert the header of response [header] to primary key created / updated object.
   int convertLocationId(Headers header) {
-    String? location = header.value("location");
-    if (location != "" && location != null) {
-      String lastPath = Uri.parse(location).pathSegments.last;
-      return int.parse(lastPath);
-    } else {
+    final String? location = header.value("location");
+    if (location == null || location.isEmpty) {
       return 0;
     }
+    final uri = Uri.tryParse(location);
+    if (uri == null || uri.pathSegments.isEmpty) {
+      return 0;
+    }
+    final lastPath = uri.pathSegments.last;
+    return int.tryParse(lastPath) ?? 0;
   }
 
   /// Convert the header of response [header] to primary key created / updated object.
   String convertLocationIdString(Headers header) {
-    String? location = header.value("location");
-    if (location != "" && location != null) {
-      String lastPath = Uri.parse(location).pathSegments.last;
-      return lastPath;
-    } else {
+    final String? location = header.value("location");
+    if (location == null || location.isEmpty) {
       return "";
     }
+    final uri = Uri.tryParse(location);
+    if (uri == null || uri.pathSegments.isEmpty) {
+      return "";
+    }
+    return uri.pathSegments.last;
   }
 
   /// Convert the Proffix time string [pxtime] to DateTime object.
   DateTime convertPxTimeToTime(String? pxtime) {
-    if (pxtime == null) {
-      return DateTime(0, 0, 0);
-    } else {
-      DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
+    if (pxtime == null || pxtime.trim().isEmpty) {
+      // Fallback: epoch-like value
+      return DateTime.utc(1970, 1, 1);
+    }
+    try {
+      // PROFFIX examples use 'yyyy-MM-dd HH:mm:ss' (e.g., 2004-04-11 00:00:00)
+      final DateFormat pxformat = DateFormat("yyyy-MM-dd HH:mm:ss");
       return pxformat.parse(pxtime);
+    } catch (_) {
+      return DateTime.utc(1970, 1, 1);
     }
   }
 
@@ -51,10 +68,9 @@ class ProffixHelpers {
   String convertTimeToPxTime(DateTime? date) {
     if (date == null) {
       return "0000-00-00 00:00:00";
-    } else {
-      final DateFormat pxformat = DateFormat("yyyy-dd-MM HH:mm:ss");
-      return pxformat.format(date);
     }
+    final DateFormat pxformat = DateFormat("yyyy-MM-dd HH:mm:ss");
+    return pxformat.format(date);
   }
 
   /// Convert the plain text password [password] to SHA-256 hashed password.

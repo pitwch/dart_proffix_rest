@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:async/async.dart';
 import 'package:dart_proffix_rest/dart_proffix_rest.dart';
 import 'package:dart_proffix_rest/src/client_base.dart';
+import 'package:dart_proffix_rest/src/session_cache.dart';
 import 'package:dio/dio.dart';
 
 class ProffixClient implements BaseProffixClient {
@@ -59,6 +60,20 @@ class ProffixClient implements BaseProffixClient {
     if (_options.volumeLicence) {
       modules = ["VOL"];
     }
+
+    // If session caching is enabled but no custom hooks are provided, use default file-based cache
+    if (_options.enableSessionCaching) {
+      final needsLoader = _options.loadSessionId == null;
+      final needsSaver = _options.saveSessionId == null;
+      final needsClearer = _options.clearSessionId == null;
+      if (needsLoader || needsSaver || needsClearer) {
+        final fileCache =
+            FileSessionCache.withDefaults(username, database, restURL);
+        _options.loadSessionId = _options.loadSessionId ?? fileCache.load;
+        _options.saveSessionId = _options.saveSessionId ?? fileCache.save;
+        _options.clearSessionId = _options.clearSessionId ?? fileCache.clear;
+      }
+    }
   }
 
   /// Dio HTTP Client
@@ -108,13 +123,13 @@ class ProffixClient implements BaseProffixClient {
 
   /// Utility method to Login
   Future<Response> login({
-    required username,
-    required password,
-    required restURL,
-    required database,
-    required options,
-    modules,
-    dioClient,
+    required String username,
+    required String password,
+    required String restURL,
+    required String database,
+    required ProffixRestOptions options,
+    List<String>? modules,
+    Dio? dioClient,
   }) async {
     try {
       final loginUri = buildUriPx(
@@ -140,6 +155,13 @@ class ProffixClient implements BaseProffixClient {
         case 201:
           _pxSessionID = loginResponse.headers.value("pxsessionid")!;
           setPxSessionId(_pxSessionID);
+          // Persist session id if caching is enabled
+          if (_options.enableSessionCaching) {
+            final saver = _options.saveSessionId;
+            if (saver != null && _pxSessionID.isNotEmpty) {
+              unawaited(saver(_pxSessionID));
+            }
+          }
 
           return loginResponse;
         default:
@@ -177,7 +199,7 @@ class ProffixClient implements BaseProffixClient {
 
   /// Do logout on Proffix REST-API and deletes PxSessionId
   Future<Response> logout({
-    dioClient,
+    Dio? dioClient,
   }) async {
     _dioClient.options.headers['content-type'] = 'application/json';
     _dioClient.options.headers['PxSessionId'] = _pxSessionID;
@@ -191,6 +213,13 @@ class ProffixClient implements BaseProffixClient {
 
       // Clear PxSessionId
       _pxSessionID = "";
+      // Also clear cached session if enabled
+      if (_options.enableSessionCaching) {
+        final clearer = _options.clearSessionId;
+        if (clearer != null) {
+          unawaited(clearer());
+        }
+      }
 
       /// It's important to close each client when it's done being used; failing to do so can cause the Dart process to hang.
       _dioClient.close();
@@ -214,22 +243,25 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? params,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
-    String pxsessionid = await getPxSessionId();
-
-    _dioClient.options.headers["pxsessionid"] = pxsessionid;
     _dioClient.options.contentType = Headers.jsonContentType;
     _dioClient.options.responseType = ResponseType.json;
 
-    try {
-      final getUri = _getUriUrl(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-              .toString(),
-          null);
+    final String getUri = _getUriUrl(
+        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+            .toString(),
+        null);
 
-      var resp = await _dioClient.get(
+    Future<Response> doRequest() async {
+      final pxsessionid = await getPxSessionId();
+      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+      return await _dioClient.get(
         getUri,
         queryParameters: params,
       );
+    }
+
+    try {
+      final resp = await doRequest();
       switch (resp.statusCode) {
         case 200:
           // Update PxSessionId
@@ -239,14 +271,18 @@ class ProffixClient implements BaseProffixClient {
           throw Result.error(
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried =
+            await _retryAfterUnauthorized(() async => await doRequest());
+        // Update PxSessionId
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
@@ -258,19 +294,22 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? params,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    String pxsessionid = await getPxSessionId();
     _dioClient.options.contentType = Headers.jsonContentType;
     _dioClient.options.responseType = ResponseType.json;
 
-    _dioClient.options.headers['PxSessionId'] = pxsessionid;
+    final String postUri = _getUriUrl(
+        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+            .toString(),
+        params);
+
+    Future<Response> doRequest() async {
+      final pxsessionid = await getPxSessionId();
+      _dioClient.options.headers['PxSessionId'] = pxsessionid;
+      return await _dioClient.post(postUri, data: data);
+    }
 
     try {
-      final postUri = _getUriUrl(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-              .toString(),
-          params);
-
-      var resp = await _dioClient.post(postUri, data: data);
+      final resp = await doRequest();
       if (resp.statusCode == null ||
           (resp.statusCode! < 200 && resp.statusCode! > 300)) {
         throw ProffixException(body: resp.data, statusCode: resp.statusCode);
@@ -279,14 +318,17 @@ class ProffixClient implements BaseProffixClient {
         setPxSessionId(resp.headers.value("pxsessionid"));
         return resp;
       }
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried =
+            await _retryAfterUnauthorized(() async => await doRequest());
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
@@ -297,19 +339,21 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    String pxsessionid = await getPxSessionId();
-
     _dioClient.options.headers['content-type'] = 'application/json';
-    _dioClient.options.headers['PxSessionId'] = pxsessionid;
+
+    final String uri =
+        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]);
+
+    Future<Response> doRequest() async {
+      final pxsessionid = await getPxSessionId();
+      _dioClient.options.headers['PxSessionId'] = pxsessionid;
+      return await _dioClient
+          .patch(uri, data: jsonEncode(data))
+          .timeout(Duration(seconds: _options.timeout));
+    }
 
     try {
-      var resp = await _dioClient
-          .patch(
-              buildUriPx(
-                  restURL, [_options.apiPrefix, _options.version, endpoint]),
-              data: jsonEncode(data))
-          .timeout(Duration(seconds: _options.timeout));
-
+      final resp = await doRequest();
       if (resp.statusCode == null ||
           (resp.statusCode! < 200 || resp.statusCode! > 300)) {
         throw ProffixException(body: resp.data, statusCode: resp.statusCode);
@@ -318,14 +362,17 @@ class ProffixClient implements BaseProffixClient {
         setPxSessionId(resp.headers.value("pxsessionid"));
         return resp;
       }
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried =
+            await _retryAfterUnauthorized(() async => await doRequest());
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
@@ -337,22 +384,23 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? params,
   }) async {
     // return await call('post', path: path, headers: headers, data: data);
-    String pxsessionid = await getPxSessionId();
-
     _dioClient.options.headers['content-type'] = 'application/json';
-    _dioClient.options.headers['PxSessionId'] = pxsessionid;
 
-    try {
-      ///
+    final String postUri = _getUriUrl(
+        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
+            .toString(),
+        params);
 
-      final postUri = _getUriUrl(
-          buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint])
-              .toString(),
-          params);
-
-      var resp = await _dioClient
+    Future<Response> doRequest() async {
+      final pxsessionid = await getPxSessionId();
+      _dioClient.options.headers['PxSessionId'] = pxsessionid;
+      return await _dioClient
           .put(postUri, data: json.encode(data))
           .timeout(Duration(seconds: _options.timeout));
+    }
+
+    try {
+      final resp = await doRequest();
       if (resp.statusCode == null ||
           (resp.statusCode! < 200 || resp.statusCode! > 300)) {
         throw ProffixException(body: resp.data, statusCode: resp.statusCode);
@@ -361,44 +409,52 @@ class ProffixClient implements BaseProffixClient {
         setPxSessionId(resp.headers.value("pxsessionid"));
         return resp;
       }
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried =
+            await _retryAfterUnauthorized(() async => await doRequest());
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
   /// Utility method to make http delete call
   @override
   Future<Response> delete({String endpoint = ''}) async {
-    String pxsessionid = await getPxSessionId();
-
     _dioClient.options.headers["content-type"] = "application/json";
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
+
+    final String uri =
+        buildUriPx(restURL, [_options.apiPrefix, _options.version, endpoint]);
+
+    Future<Response> doRequest() async {
+      final pxsessionid = await getPxSessionId();
+      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+      return await _dioClient
+          .delete(uri)
+          .timeout(Duration(seconds: _options.timeout));
+    }
 
     try {
-      var resp = await _dioClient
-          .delete(
-            buildUriPx(
-                restURL, [_options.apiPrefix, _options.version, endpoint]),
-          )
-          .timeout(Duration(seconds: _options.timeout));
-
+      final resp = await doRequest();
       // Update PxSessionId
       setPxSessionId(resp.headers.value("pxsessionid"));
       return resp;
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried =
+            await _retryAfterUnauthorized(() async => await doRequest());
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
@@ -409,10 +465,7 @@ class ProffixClient implements BaseProffixClient {
     Map<String, dynamic>? data,
   }) async {
     // return await call('get', path: path, headers: headers, params: params);
-    String pxsessionid = await getPxSessionId();
-
     _dioClient.options.headers["content-type"] = "application/json";
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
     // Set ResponseType to bytes
     _dioClient.options.responseType = ResponseType.bytes;
@@ -427,10 +480,21 @@ class ProffixClient implements BaseProffixClient {
 
       String downloadURI = Uri.parse(downloadLocation!).toString();
 
-      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+      Future<Response> doRequest() async {
+        final pxsessionid = await getPxSessionId();
+        _dioClient.options.headers["PxSessionId"] = pxsessionid;
+        return await _dioClient.get(downloadURI,
+            options: Options(responseType: ResponseType.bytes));
+      }
 
-      return await _dioClient.get(downloadURI,
-          options: Options(responseType: ResponseType.bytes));
+      try {
+        return await doRequest();
+      } on DioException catch (e) {
+        if ((e.response?.statusCode ?? 0) == 401) {
+          return await _retryAfterUnauthorized(() async => await doRequest());
+        }
+        rethrow;
+      }
     } catch (e) {
       if (e is DioException) {
         throw ProffixException(
@@ -446,20 +510,29 @@ class ProffixClient implements BaseProffixClient {
   Future<Response> downloadFile(
       {required String dateiNr, Map<String, dynamic>? params}) async {
     try {
-      String pxsessionid = await getPxSessionId();
-
       final downloadUri = _getUriUrl(
           buildUriPx(restURL,
               [_options.apiPrefix, _options.version, "PRO/Datei/$dateiNr"]),
           params);
 
-      _dioClient.options.headers["PxSessionId"] = pxsessionid;
+      Future<Response> doRequest() async {
+        final pxsessionid = await getPxSessionId();
+        _dioClient.options.headers["PxSessionId"] = pxsessionid;
+        return await _dioClient.get(downloadUri,
+            data: {},
+            options: Options(
+              responseType: ResponseType.bytes,
+            ));
+      }
 
-      return await _dioClient.get(downloadUri,
-          data: {},
-          options: Options(
-            responseType: ResponseType.bytes,
-          ));
+      try {
+        return await doRequest();
+      } on DioException catch (e) {
+        if ((e.response?.statusCode ?? 0) == 401) {
+          return await _retryAfterUnauthorized(() async => await doRequest());
+        }
+        rethrow;
+      }
     } catch (e) {
       if (e is ProffixException) {
         rethrow;
@@ -479,11 +552,9 @@ class ProffixClient implements BaseProffixClient {
   @override
   Future<String> uploadFile({String? fileName, required Uint8List data}) async {
     // return await call('post', path: path, headers: headers, data: data);
-    String pxsessionid = await getPxSessionId();
     _dioClient.options.contentType = Headers.jsonContentType;
     _dioClient.options.responseType = ResponseType.json;
 
-    _dioClient.options.headers['PxSessionId'] = pxsessionid;
     _dioClient.options.headers["content-type"] = "application/octet-stream";
     _dioClient.options.contentType = "application/octet-stream";
     _dioClient.options.headers['Content-Length'] = data.length;
@@ -496,20 +567,45 @@ class ProffixClient implements BaseProffixClient {
               .toString(),
           fileName != null ? params : null);
 
-      var resp = await _dioClient.post(postUri,
-          // onSendProgress: (count, total) => {print(count)},
-          options: Options(
-              receiveTimeout: Duration(minutes: 2),
-              sendTimeout: Duration(minutes: 2)),
-          data: Stream.fromIterable(data.map((e) => [e])));
-      if (resp.statusCode == null ||
-          (resp.statusCode! < 200 && resp.statusCode! > 300)) {
-        throw ProffixException(body: resp.data, statusCode: resp.statusCode);
-      } else {
-        // Update PxSessionId
-        setPxSessionId(resp.headers.value("pxsessionid"));
-        String dateiNr = ProffixHelpers().convertLocationIdString(resp.headers);
-        return dateiNr;
+      Future<Response> doRequest() async {
+        final pxsessionid = await getPxSessionId();
+        _dioClient.options.headers['PxSessionId'] = pxsessionid;
+        return await _dioClient.post(postUri,
+            // onSendProgress: (count, total) => {print(count)},
+            options: Options(
+                receiveTimeout: Duration(minutes: 2),
+                sendTimeout: Duration(minutes: 2)),
+            data: Stream.fromIterable(data.map((e) => [e])));
+      }
+
+      try {
+        var resp = await doRequest();
+        if (resp.statusCode == null ||
+            (resp.statusCode! < 200 && resp.statusCode! > 300)) {
+          throw ProffixException(body: resp.data, statusCode: resp.statusCode);
+        } else {
+          // Update PxSessionId
+          setPxSessionId(resp.headers.value("pxsessionid"));
+          String dateiNr =
+              ProffixHelpers().convertLocationIdString(resp.headers);
+          return dateiNr;
+        }
+      } on DioException catch (e) {
+        if ((e.response?.statusCode ?? 0) == 401) {
+          var resp =
+              await _retryAfterUnauthorized(() async => await doRequest());
+          setPxSessionId(resp.headers.value("pxsessionid"));
+          if (resp.statusCode == null ||
+              (resp.statusCode! < 200 && resp.statusCode! > 300)) {
+            throw ProffixException(
+                body: resp.data, statusCode: resp.statusCode);
+          } else {
+            String dateiNr =
+                ProffixHelpers().convertLocationIdString(resp.headers);
+            return dateiNr;
+          }
+        }
+        rethrow;
       }
     } catch (e) {
       if (e is ProffixException) {
@@ -525,10 +621,7 @@ class ProffixClient implements BaseProffixClient {
   @override
   Future<Response> check() async {
     // return await call('get', path: path, headers: headers, params: params);
-    String pxsessionid = await getPxSessionId();
-
     _dioClient.options.headers["content-type"] = "application/json";
-    _dioClient.options.headers["PxSessionId"] = pxsessionid;
 
     try {
       Map<String, String> params = {"Limit": "1", "Fields": "AdressNr"};
@@ -537,10 +630,15 @@ class ProffixClient implements BaseProffixClient {
               [_options.apiPrefix, _options.version, "ADR/Adresse"]).toString(),
           params);
 
-      var resp = await _dioClient
-          .get(getUri)
-          .timeout(Duration(seconds: _options.timeout));
+      Future<Response> doRequest() async {
+        final pxsessionid = await getPxSessionId();
+        _dioClient.options.headers["PxSessionId"] = pxsessionid;
+        return await _dioClient
+            .get(getUri)
+            .timeout(Duration(seconds: _options.timeout));
+      }
 
+      var resp = await doRequest();
       switch (resp.statusCode) {
         case 200:
 
@@ -551,14 +649,25 @@ class ProffixClient implements BaseProffixClient {
           throw Result.error(
               ProffixException(body: resp.data, statusCode: resp.statusCode));
       }
-    } catch (e) {
-      if (e is DioException) {
-        //handle DioError here by error type or by error code
-        throw ProffixException(
-            body: e.response, statusCode: e.response?.statusCode ?? 0);
-      } else {
-        throw ProffixException(body: e.toString(), statusCode: 0);
+    } on DioException catch (e) {
+      if ((e.response?.statusCode ?? 0) == 401) {
+        final retried = await _retryAfterUnauthorized(() async =>
+            await _dioClient
+                .get(_getUriUrl(
+                    buildUriPx(restURL, [
+                      _options.apiPrefix,
+                      _options.version,
+                      "ADR/Adresse"
+                    ]).toString(),
+                    {"Limit": "1", "Fields": "AdressNr"}))
+                .timeout(Duration(seconds: _options.timeout)));
+        setPxSessionId(retried.headers.value("pxsessionid"));
+        return retried;
       }
+      throw ProffixException(
+          body: e.response, statusCode: e.response?.statusCode ?? 0);
+    } catch (e) {
+      throw ProffixException(body: e.toString(), statusCode: 0);
     }
   }
 
@@ -574,12 +683,31 @@ class ProffixClient implements BaseProffixClient {
   /// Manually sets the PxSessionId
   void setPxSessionId(String? pxsessionid) {
     _pxSessionID = pxsessionid!;
+    // Persist session id if caching is enabled
+    if (_options.enableSessionCaching) {
+      final saver = _options.saveSessionId;
+      if (saver != null && _pxSessionID.isNotEmpty) {
+        unawaited(saver(_pxSessionID));
+      }
+    }
   }
 
   /// Returns the used PxSessionId
   Future<String> getPxSessionId() async {
     if (_pxSessionID == "") {
       try {
+        // Try to load cached session id first if enabled
+        if (_options.enableSessionCaching) {
+          final loader = _options.loadSessionId;
+          if (loader != null) {
+            final cached = await loader();
+            if (cached != null && cached.isNotEmpty) {
+              _pxSessionID = cached;
+              return _pxSessionID;
+            }
+          }
+        }
+
         var lgn = await login(
             username: username,
             password: password,
@@ -606,5 +734,23 @@ class ProffixClient implements BaseProffixClient {
       }
     }
     return _pxSessionID;
+  }
+
+  /// Clears the in-memory and cached PxSessionId, then re-authenticates and retries the given request
+  Future<Response> _retryAfterUnauthorized(
+      Future<Response> Function() requestFn) async {
+    // Invalidate in-memory session id
+    _pxSessionID = "";
+    // Clear cached session if provided
+    if (_options.enableSessionCaching) {
+      final clearer = _options.clearSessionId;
+      if (clearer != null) {
+        await clearer();
+      }
+    }
+    // Ensure we have a new session id
+    await getPxSessionId();
+    // Retry the request once
+    return await requestFn();
   }
 }

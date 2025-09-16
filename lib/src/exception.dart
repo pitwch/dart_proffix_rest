@@ -21,54 +21,74 @@ class ProffixException implements Exception {
 
   @override
   String toString() {
-    if (body == null) {
-      return "ProffixException";
-    } else if (body == "") {
-      return "ProffixException";
-    } else {
-      try {
-        var jsonBody = jsonDecode(body.toString());
-        var message = jsonBody["Message"];
-        List<String> fieldArray = [];
-        //var type = jsonBody["Type"];
-        var fields = jsonBody["Fields"];
-        if (fields != null) {
-          for (var field in fields) {
-            fieldArray.add(field["Name"].toString());
+    final prefix = statusCode != null
+        ? "ProffixException[$statusCode]"
+        : "ProffixException";
+    final raw = body?.toString();
+    if (raw == null || raw.isEmpty) {
+      return prefix;
+    }
+    try {
+      final dynamic jsonBody = jsonDecode(raw);
+      final dynamic msgDyn =
+          (jsonBody is Map<String, dynamic>) ? jsonBody["Message"] : null;
+      final String message =
+          (msgDyn is String && msgDyn.isNotEmpty) ? msgDyn : prefix;
+      final dynamic fieldsDyn =
+          (jsonBody is Map<String, dynamic>) ? jsonBody["Fields"] : null;
+      if (fieldsDyn is Iterable) {
+        final names = <String>[];
+        for (final f in fieldsDyn) {
+          if (f is Map && f["Name"] != null) {
+            names.add(f["Name"].toString());
           }
-          return message + " (" + fieldArray.join(",") + ")";
         }
-        return message;
-      } catch (e) {
-        return body.toString();
+        if (names.isNotEmpty) {
+          return "$message (${names.join(",")})";
+        }
       }
+      return message;
+    } catch (_) {
+      return raw;
     }
   }
 
   ProffixError toPxError() {
-    if (body == null) {
+    final raw = body?.toString();
+    if (raw == null || raw.isEmpty) {
       return ProffixError(message: "ProffixException");
-    } else if (body == "") {
-      return ProffixError(message: "ProffixException");
-    } else {
-      var pxerr = ProffixError();
-      var jsonBody = jsonDecode(body.toString());
-      pxerr.message = jsonBody["Message"];
-      pxerr.type = jsonBody["Type"];
+    }
+    try {
+      final dynamic jsonBody = jsonDecode(raw);
+      final pxerr = ProffixError();
+      if (jsonBody is Map<String, dynamic>) {
+        final msgDyn = jsonBody["Message"];
+        final typeDyn = jsonBody["Type"];
+        pxerr.message = (msgDyn is String) ? msgDyn : "";
+        pxerr.type = (typeDyn is String) ? typeDyn : "";
 
-      List<ProffixErrorField> fieldArray = [];
-      var fields = jsonBody["Fields"];
-      if (fields != null) {
-        for (var field in fields) {
-          fieldArray.add(ProffixErrorField(
-              name: field["Name"],
-              reason: field["Reason"],
-              message: field["Message"]));
+        final fieldsDyn = jsonBody["Fields"];
+        if (fieldsDyn is Iterable) {
+          final fieldArray = <ProffixErrorField>[];
+          for (final f in fieldsDyn) {
+            if (f is Map) {
+              fieldArray.add(
+                ProffixErrorField(
+                  name: (f["Name"] ?? "").toString(),
+                  reason: (f["Reason"] ?? "").toString(),
+                  message: (f["Message"] ?? "").toString(),
+                ),
+              );
+            }
+          }
+          if (fieldArray.isNotEmpty) {
+            pxerr.fields = fieldArray;
+          }
         }
-        pxerr.fields = fieldArray;
-        return pxerr;
       }
       return pxerr;
+    } catch (_) {
+      return ProffixError(message: raw);
     }
   }
 }

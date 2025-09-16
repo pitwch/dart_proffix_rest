@@ -89,6 +89,58 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 | log           | true                                  | Aktiviert den Log für Debugging; Standard = false              |
 | volumeLicence | false                                 | Nutzt PROFFIX Volumenlizenzierung                              |
 
+#### Session Caching (optional)
+
+Ab Version X.X kann die PxSessionId optional gecached werden, um unnötige Logins zu vermeiden. Der Cache wird solange verwendet, bis eine Anfrage mit HTTP 401 (Unauthorized) fehlschlägt. In diesem Fall wird die Session automatisch invalidiert, neu eingeloggt und die Anfrage einmalig wiederholt.
+
+Es gibt zwei Möglichkeiten:
+
+1. Einfach aktivieren (Default: Datei-basierter Cache)
+
+Ohne eigene Callbacks wird automatisch ein Datei-basierter Cache verwendet:
+
+- Windows: %APPDATA%/dart_proffix_rest
+- Sonst: systemTemp/dart_proffix_rest
+
+```dart
+final client = ProffixClient(
+  database: 'DEMO',
+  restURL: 'https://myserver.ch:12299',
+  username: 'USR',
+  password: '...SHA256... ',
+  options: ProffixRestOptions(
+    enableSessionCaching: true, // aktiviert den Cache
+  ),
+);
+```
+
+2. Eigene Speicherlogik verwenden
+
+Sie können eigene Callbacks zum Laden/Speichern/Löschen der Session-ID übergeben (z. B. Secure Storage, SharedPreferences, etc.):
+
+```dart
+final myStore = MySessionStore(); // ihre eigene Implementierung
+
+final client = ProffixClient(
+  database: 'DEMO',
+  restURL: 'https://myserver.ch:12299',
+  username: 'USR',
+  password: '...SHA256... ',
+  options: ProffixRestOptions(
+    enableSessionCaching: true,
+    loadSessionId: () async => await myStore.read(),
+    saveSessionId: (sid) async => await myStore.write(sid),
+    clearSessionId: () async => await myStore.clear(),
+  ),
+);
+```
+
+Verhalten im Überblick:
+
+- Der Client lädt beim ersten Zugriff auf `getPxSessionId()` einen vorhandenen Cache, falls aktiviert.
+- Jeder erfolgreiche Request aktualisiert die intern gespeicherte Session und persistiert sie (falls aktiviert).
+- Bei HTTP 401 wird der Cache invalidiert, neu eingeloggt und die Anfrage einmal wiederholt.
+
 #### Methoden
 
 | Parameter  | Typ                     | Bemerkung                                                                                                |

@@ -1,5 +1,12 @@
 # Release Note
 
+## v0.4.0
+
+- Update deps
+- Fix ProffixException
+- Implement session caching with file-based storage and retry logic
+- Add retry logic for failed requests
+
 ## v0.3.8
 
 - Update deps

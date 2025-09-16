@@ -9,6 +9,18 @@ class ProffixRestOptions {
   bool log;
   bool volumeLicence;
 
+  /// Optional: enable client-side caching of PxSessionId
+  bool enableSessionCaching;
+
+  /// Optional: async callback to load a cached PxSessionId
+  Future<String?> Function()? loadSessionId;
+
+  /// Optional: async callback to persist a PxSessionId
+  Future<void> Function(String)? saveSessionId;
+
+  /// Optional: async callback to clear the cached PxSessionId
+  Future<void> Function()? clearSessionId;
+
   ProffixRestOptions(
       {this.key = "",
       this.version = "v4",
@@ -18,5 +30,9 @@ class ProffixRestOptions {
       this.timeout = 15,
       this.batchsize = 200,
       this.log = false,
-      this.volumeLicence = false});
+      this.volumeLicence = false,
+      this.enableSessionCaching = false,
+      this.loadSessionId,
+      this.saveSessionId,
+      this.clearSessionId});
 }
