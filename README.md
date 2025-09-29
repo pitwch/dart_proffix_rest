@@ -92,7 +92,7 @@ Optionen sind **fakultativ** und werden in der Regel nicht benötigt:
 
 #### Session Caching (optional)
 
-Ab Version X.X kann die PxSessionId optional gecached werden, um unnötige Logins zu vermeiden. Der Cache wird solange verwendet, bis eine Anfrage mit HTTP 401 (Unauthorized) fehlschlägt. In diesem Fall wird die Session automatisch invalidiert, neu eingeloggt und die Anfrage einmalig wiederholt.
+Ab Version 0.4.1 kann die PxSessionId optional gecached werden, um unnötige Logins zu vermeiden. Der Cache wird solange verwendet, bis eine Anfrage mit HTTP 401 (Unauthorized) fehlschlägt. In diesem Fall wird die Session automatisch invalidiert, neu eingeloggt und die Anfrage einmalig wiederholt.
 
 Es gibt zwei Möglichkeiten:
 
