@@ -1,5 +1,15 @@
 # Release Note
 
+## v0.4.2
+
+- Change ProffixHelpers methods from instance to static methods
+- Update all ProffixHelpers() instantiations to static method calls
+- Make ProffixError and ProffixErrorField immutable with final fields
+- Add equality operators and hashCode to exception classes
+- Refactor ProffixException toString() and toPxError() for better readability
+- Extract common location header parsing logic into private method
+- Cache Date
+
 ## v0.4.1
 
 - Fix logout
