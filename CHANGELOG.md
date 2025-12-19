@@ -1,5 +1,9 @@
 # Release Note
 
+## v0.4.3
+
+- update test file to use static ProffixHelpers methods
+
 ## v0.4.2
 
 - Change ProffixHelpers methods from instance to static methods

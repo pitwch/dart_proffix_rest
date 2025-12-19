@@ -21,7 +21,7 @@ void main() {
       database: envVars['PX_DB'].toString(),
       restURL: envVars['PX_URL'].toString(),
       username: envVars['PX_USER'].toString(),
-      password: ProffixHelpers().convertSHA256(envVars['PX_PASS'].toString()),
+      password: ProffixHelpers.convertSHA256(envVars['PX_PASS'].toString()),
       modules: ["VOL"],
       enableLogger: false,
       options: ProffixRestOptions(volumeLicence: true));
@@ -49,7 +49,7 @@ void main() {
       expect(postReq.statusCode, 201);
 
       // Get LocationID
-      tmpAdressNr = ProffixHelpers().convertLocationId(postReq.headers);
+      tmpAdressNr = ProffixHelpers.convertLocationId(postReq.headers);
 
       // Temporary save PxSessionId for Check
       tmpPxSessionId = validClient.getPxSessionId().toString();
@@ -70,7 +70,7 @@ void main() {
       expect(tmpAdressNr, parsedJson[0]["AdressNr"]);
       expect(tmpAdressNr > 0, true);
 
-      int count = ProffixHelpers().getFilteredCount(getReq.headers);
+      int count = ProffixHelpers.getFilteredCount(getReq.headers);
       expect(count > 0, true);
     });
 
@@ -199,15 +199,15 @@ void main() {
 
   group('Extended tests', () {
     test('Check convertPxTimeToTime', () async {
-      var tmpPxTime = ProffixHelpers().convertTimeToPxTime(tmpDateTime);
-      var tmpTm = ProffixHelpers().convertPxTimeToTime(tmpPxTime);
+      var tmpPxTime = ProffixHelpers.convertTimeToPxTime(tmpDateTime);
+      var tmpTm = ProffixHelpers.convertPxTimeToTime(tmpPxTime);
       expect(tmpTm.difference(tmpDateTime).inSeconds, 0);
 
       // Check null
-      var nullTime = ProffixHelpers().convertPxTimeToTime(null);
+      var nullTime = ProffixHelpers.convertPxTimeToTime(null);
       expect(nullTime.hour, 0);
 
-      var nullPxTime = ProffixHelpers().convertTimeToPxTime(null);
+      var nullPxTime = ProffixHelpers.convertTimeToPxTime(null);
       expect(nullPxTime, "0000-00-00 00:00:00");
     });
 
@@ -216,7 +216,7 @@ void main() {
           database: envVars['PX_DB'].toString(),
           restURL: envVars['PX_URL'].toString(),
           username: envVars['PX_USER'].toString(),
-          password: ProffixHelpers().convertSHA256("nonvalidlogin"),
+          password: ProffixHelpers.convertSHA256("nonvalidlogin"),
           modules: ["VOL"],
           options: ProffixRestOptions(volumeLicence: true));
 
@@ -233,7 +233,7 @@ void main() {
           database: envVars['PX_DB'].toString(),
           restURL: "https://sdfhdfhsdfsfe.ch:12323",
           username: envVars['PX_USER'].toString(),
-          password: ProffixHelpers().convertSHA256("nonvalidlogin"),
+          password: ProffixHelpers.convertSHA256("nonvalidlogin"),
           modules: ["VOL"],
           options: ProffixRestOptions(volumeLicence: true));
 
