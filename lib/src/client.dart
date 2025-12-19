@@ -597,8 +597,7 @@ class ProffixClient implements BaseProffixClient {
         } else {
           // Update PxSessionId
           setPxSessionId(resp.headers.value("pxsessionid"));
-          String dateiNr =
-              ProffixHelpers().convertLocationIdString(resp.headers);
+          String dateiNr = ProffixHelpers.convertLocationIdString(resp.headers);
           return dateiNr;
         }
       } on DioException catch (e) {
@@ -612,7 +611,7 @@ class ProffixClient implements BaseProffixClient {
                 body: resp.data, statusCode: resp.statusCode);
           } else {
             String dateiNr =
-                ProffixHelpers().convertLocationIdString(resp.headers);
+                ProffixHelpers.convertLocationIdString(resp.headers);
             return dateiNr;
           }
         }

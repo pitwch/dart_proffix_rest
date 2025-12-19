@@ -32,7 +32,7 @@ void main() async {
       await pxClient.post(endpoint: "ADR/Adresse", data: tmpAddress);
 
   // AdresseNr der neu erstellen Adresse anzeigen
-  int adressNr = ProffixHelpers().convertLocationId(createAddress.headers);
+  int adressNr = ProffixHelpers.convertLocationId(createAddress.headers);
   print("${"Die neue Adresse wurde mit AdressNr $adressNr"} erstellt");
   // Alle Adressen, welche wie 'Muster' lauten abrufen
   var getAddress = await pxClient.get(endpoint: "ADR/Adresse", params: {
@@ -41,7 +41,7 @@ void main() async {
   });
 
   // Die Anzahl der Suchergebnisse aus dem Header ziehen
-  int countResults = ProffixHelpers().getFilteredCount(getAddress.headers);
+  int countResults = ProffixHelpers.getFilteredCount(getAddress.headers);
   print("${"Es wurden $countResults"} Adressen für 'Muster' gefunden");
 
   // Die gefundenden Adressen aus JSON dekodieren
@@ -52,7 +52,7 @@ void main() async {
 
   // Das 'ErstelltAm' Datum in ein DateTime Objekt umwandeln
   var erstelltAm =
-      ProffixHelpers().convertPxTimeToTime(firstResult["ErstelltAm"]);
+      ProffixHelpers.convertPxTimeToTime(firstResult["ErstelltAm"]);
 
   // Die Differenz zwischen dem 'ErstelltAm' Datum und heute berechnen
   var differenz = erstelltAm.difference(DateTime.now());
